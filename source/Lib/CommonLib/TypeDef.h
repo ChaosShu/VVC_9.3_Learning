@@ -378,6 +378,7 @@ enum SliceType
 };
 
 /// chroma formats (according to how the monochrome or the color planes are intended to be coded)
+/// 颜色格式420,422等
 enum ChromaFormat
 {
   CHROMA_400        = 0,
