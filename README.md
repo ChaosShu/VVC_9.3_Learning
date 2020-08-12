@@ -1,6 +1,40 @@
 VTM reference software for VVC
 ==============================
 
+
+
+
+---p        :pointer    ;指针
+---c        :const,class    ;静态，类
+---i        :int    ;int型
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 This software package is the reference software for Versatile Video Coding (VVC). The reference software includes both encoder and decoder functionality.
 
 Reference software is useful in aiding users of a video coding standard to establish and test conformance and interoperability, and to educate users and demonstrate the capabilities of the standard. For these purposes, this software is provided as an aid for the study and implementation of Versatile Video Coding.
@@ -12,7 +46,7 @@ A software manual, which contains usage instructions, can be found in the "doc" 
 Build instructions
 ==================
 
-The CMake tool is used to create platform-specific build files. 
+The CMake tool is used to create platform-specific build files.
 
 Although CMake may be able to generate 32-bit binaries, **it is generally suggested to build 64-bit binaries**. 32-bit binaries are not able to access more than 2GB of RAM, which will not be sufficient for coding larger image formats. Building in 32-bit environments is not tested and will not be supported.
 
@@ -22,14 +56,14 @@ Build instructions for plain CMake (suggested)
 
 **Note:** A working CMake installation is required for building the software.
 
-CMake generates configuration files for the compiler environment/development environment on each platform. 
+CMake generates configuration files for the compiler environment/development environment on each platform.
 The following is a list of examples for Windows (MS Visual Studio), macOS (Xcode) and Linux (make).
 
 Open a command prompt on your system and change into the root directory of this project.
 
 Create a build directory in the root directory:
 ```bash
-mkdir build 
+mkdir build
 ```
 
 Use one of the following CMake commands, based on your platform. Feel free to change the commands to satisfy
@@ -91,7 +125,7 @@ Build instructions for make
 ---------------------------
 
 **Note:** The build instructions in this section require the make tool and Python to be installed, which are
-part of usual Linux and macOS environments. See below for installation instruction for Python and GnuWin32 
+part of usual Linux and macOS environments. See below for installation instruction for Python and GnuWin32
 on Windows.
 
 Open a command prompt on your system and change into the root directory of this project.
@@ -104,7 +138,7 @@ make all
 
 **MSYS2 and MinGW (Windows)**
 
-**Note:** Build files for MSYS MinGW were added on request. The build platform is not regularily tested and can't be supported. 
+**Note:** Build files for MSYS MinGW were added on request. The build platform is not regularily tested and can't be supported.
 
 Open an MSYS MinGW 64-Bit terminal and change into the root directory of this project.
 
@@ -131,4 +165,3 @@ Install the needed toolchains:
 ```bash
 pacman -S --needed base-devel mingw-w64-i686-toolchain mingw-w64-x86_64-toolchain git subversion mingw-w64-i686-cmake mingw-w64-x86_64-cmake
 ```
-

@@ -2002,7 +2002,8 @@ void EncGOP::compressGOP( int iPOCLast, int iNumPicRcvd, PicList& rcListPic,
       m_iLastIDR = pocCurr;
     }
 
-    // 可以看到，新的Access Unit 会分配SPS和PPS
+    ///@UpdatedBy:Chaos 
+    // 可以看到，新的Access Unit 会分配SPS和PPS  
 
     // start a new access unit: create an entry in the list of output access units
     AccessUnit accessUnit;
@@ -3323,7 +3324,7 @@ void EncGOP::compressGOP( int iPOCLast, int iNumPicRcvd, PicList& rcListPic,
         pcSlice->clearSubstreamSizes(  );
         {
           uint32_t numBinsCoded = 0;
-          m_pcSliceEncoder->encodeSlice(pcPic, &(substreamsOut[0]), numBinsCoded);
+          m_pcSliceEncoder->encodeSlice(pcPic, &(substreamsOut[0]), numBinsCoded);//编码一个Slice/Frame
           binCountsInNalUnits+=numBinsCoded;
         }
         {

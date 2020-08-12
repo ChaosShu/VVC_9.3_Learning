@@ -233,7 +233,7 @@ int main(int argc, char* argv[])
 
   // call encoding function per layer
   bool eos = false;
-  unsigned short GOP_cnt{ 0 };
+  unsigned short GOP_cnt{ 0 };///@UpdatedBy:Chaos 
   
   while( !eos )
   { //while每执行一次，代表已编码完一整个GOP
@@ -278,7 +278,7 @@ int main(int argc, char* argv[])
         try
         {
 #endif
-          keepLoop = encApp->encode();
+          keepLoop = encApp->encode();//主函数
 #ifndef _DEBUG
         }
         catch( Exception &e )

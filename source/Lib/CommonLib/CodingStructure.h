@@ -92,7 +92,7 @@ public:
   APS *      lmcsAps;
   APS *      scalinglistAps;
   const VPS *vps;
-  const PreCalcValues* pcv;
+  const PreCalcValues* pcv;//Ô¤¼ÆËãÖµ
 
   CodingStructure(CUCache&, PUCache&, TUCache&);
 

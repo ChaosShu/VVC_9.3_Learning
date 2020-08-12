@@ -210,7 +210,7 @@ void CABACWriter::coding_tree_unit( CodingStructure& cs, const UnitArea& area, i
     CUCtx chromaCuCtx(qps[CH_C]);
     QTBTPartitioner chromaPartitioner;
     chromaPartitioner.initCtu(area, CH_C, *cs.slice);
-    coding_tree(cs, partitioner, cuCtx, &chromaPartitioner, &chromaCuCtx);
+    coding_tree(cs, partitioner, cuCtx, &chromaPartitioner, &chromaCuCtx);//划分树结构
     qps[CH_L] = cuCtx.qp;
     qps[CH_C] = chromaCuCtx.qp;
   }
