@@ -567,7 +567,7 @@ void CABACWriter::mode_constraint( const PartSplit split, const CodingStructure&
 void CABACWriter::split_cu_mode( const PartSplit split, const CodingStructure& cs, Partitioner& partitioner )
 {
   bool canNo, canQt, canBh, canBv, canTh, canTv;
-  partitioner.canSplit( cs, canNo, canQt, canBh, canBv, canTh, canTv );
+  partitioner.canSplit( cs, canNo, canQt, canBh, canBv, canTh, canTv );//施加限制,更新can的划分
 
   bool canSpl[6] = { canNo, canQt, canBh, canBv, canTh, canTv };
 

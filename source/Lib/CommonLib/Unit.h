@@ -181,7 +181,7 @@ typedef static_vector<CompArea, MAX_NUM_TBLOCKS> UnitBlocksType;
 struct UnitArea
 {
   ChromaFormat chromaFormat;
-  UnitBlocksType blocks;
+  UnitBlocksType blocks;//different comp blks
 
   UnitArea() : chromaFormat(NUM_CHROMA_FORMAT) { }
   UnitArea(const ChromaFormat _chromaFormat);

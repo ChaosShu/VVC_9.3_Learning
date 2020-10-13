@@ -158,7 +158,7 @@ private:
   };
 
   std::vector<CtxPair>  m_CtxBuffer;
-  CtxPair*              m_CurrCtx;
+  CtxPair*              m_CurrCtx;//start & best
   CtxCache*             m_CtxCache;
 
 #if ENABLE_SPLIT_PARALLELISM

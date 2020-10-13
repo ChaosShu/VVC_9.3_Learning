@@ -170,8 +170,8 @@ void Partitioner::copyState( const Partitioner& other )
 
 void AdaptiveDepthPartitioner::setMaxMinDepth( unsigned& minDepth, unsigned& maxDepth, const CodingStructure& cs ) const
 {
-  unsigned          stdMinDepth = 0;
-  unsigned          stdMaxDepth = ( floorLog2(cs.sps->getCTUSize()) - floorLog2(cs.sps->getMinQTSize( cs.slice->getSliceType(), chType )));
+  unsigned          stdMinDepth = 0;/* **->normal/standard min depth */
+  unsigned          stdMaxDepth = ( floorLog2(cs.sps->getCTUSize()) - floorLog2(cs.sps->getMinQTSize( cs.slice->getSliceType(), chType )));/* **->normal/standard max depth */
   const Position    pos         = currArea().blocks[chType].pos();
   const unsigned    curSliceIdx = cs.slice->getIndependentSliceIdx();
   const unsigned    curTileIdx  = cs.pps->getTileIdx( currArea().lumaPos() );
@@ -186,8 +186,8 @@ void AdaptiveDepthPartitioner::setMaxMinDepth( unsigned& minDepth, unsigned& max
 
   if( cuLeft )
   {
-    minDepth = std::min<unsigned>( minDepth, cuLeft->qtDepth );
-    maxDepth = std::max<unsigned>( maxDepth, cuLeft->qtDepth );
+    minDepth = std::min<unsigned>( minDepth, cuLeft->qtDepth );//？？？
+    maxDepth = std::max<unsigned>( maxDepth, cuLeft->qtDepth );//？？？
   }
   else
   {
@@ -386,9 +386,9 @@ void QTBTPartitioner::canSplit( const CodingStructure &cs, bool& canNo, bool& ca
   const PartSplit parlSplit = lastSplit == CU_TRIH_SPLIT ? CU_HORZ_SPLIT : CU_VERT_SPLIT;
 
   // don't allow QT-splitting below a BT split
-  if( lastSplit != CTU_LEVEL && lastSplit != CU_QUAD_SPLIT ) canQt = false;
+  if( lastSplit != CTU_LEVEL && lastSplit != CU_QUAD_SPLIT ) canQt = false;//只有CTU以及父CU为QT划分才允许当前CU进行qt
+  
   if( area.width <= minQtSize )                              canQt = false;
-
   if( areaC && areaC->width <= MIN_DUALTREE_CHROMA_WIDTH ) canQt = false;
   if( treeType == TREE_C )
   {

@@ -298,7 +298,7 @@ void EncCu::compressCtu( CodingStructure& cs, const UnitArea& area, const unsign
   partitioner.initCtu(area, CH_L, *cs.slice);
   if (m_pcEncCfg->getIBCMode())
   {
-    if (area.lx() == 0 && area.ly() == 0)
+    if (area.lx() == 0 && area.ly() == 0)//first lcu
     {
       m_pcInterSearch->resetIbcSearch();
     }
@@ -527,7 +527,9 @@ bool EncCu::xCheckBestMode( CodingStructure *&tempCS, CodingStructure *&bestCS, 
 
 }
 
-void EncCu::xCompressCU( CodingStructure*& tempCS, CodingStructure*& bestCS, Partitioner& partitioner, double maxCostAllowed )
+void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
+  CodingStructure*& bestCS, /*与当前CS同样大小*/
+  Partitioner& partitioner, double maxCostAllowed )
 {
   CHECK(maxCostAllowed < 0, "Wrong value of maxCostAllowed!");
 #if ENABLE_SPLIT_PARALLELISM
@@ -549,7 +551,7 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, CodingStructure*& bestCS, Par
   bool jointPLT = false;
   if (partitioner.isSepTree( *tempCS ))
   {
-    if( !CS::isDualITree(*tempCS) && partitioner.treeType != TREE_D )
+    if( !CS::isDualITree(*tempCS) && partitioner.treeType != TREE_D )//single Tree
     {
       compBegin = COMPONENT_Y;
       numComp = (tempCS->area.chromaFormat != CHROMA_400)?3: 1;
@@ -557,12 +559,12 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, CodingStructure*& bestCS, Par
     }
     else
     {
-    if (isLuma(partitioner.chType))
+    if (isLuma(partitioner.chType))//Dual Tree 的 Y Tree
     {
       compBegin = COMPONENT_Y;
       numComp = 1;
     }
-    else
+    else//Dual Tree 的 ChromaTree,共两个
     {
       compBegin = COMPONENT_Cb;
       numComp = 2;
@@ -634,9 +636,9 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, CodingStructure*& bestCS, Par
     }
   }
 
-  if( !m_modeCtrl->anyMode() )
+  if( !m_modeCtrl->anyMode() )//此CU的testmodes为空
   {
-    m_modeCtrl->finishCULevel( partitioner );
+    m_modeCtrl->finishCULevel( partitioner );//结束此CU的划分，弹出
     return;
   }
 
@@ -674,10 +676,10 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, CodingStructure*& bestCS, Par
     }
   }
 
-  do
+  do//check CU 的每个 testmode
   {
-    for (int i = compBegin; i < (compBegin + numComp); i++)
-    {
+    for (int i = compBegin; i < (compBegin + numComp); i++) // 对于CU每个possible的分量（根据之前的规则已确定好）
+    {//PLT模式的一些处理
       ComponentID comID = jointPLT ? (ComponentID)compBegin : ((i > 0) ? COMPONENT_Cb : COMPONENT_Y);
       tempCS->prevPLT.curPLTSize[comID] = curLastPLTSize[comID];
       memcpy(tempCS->prevPLT.curPLT[i], curLastPLT[i], curLastPLTSize[comID] * sizeof(Pel));
@@ -724,7 +726,7 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, CodingStructure*& bestCS, Par
     }
 #endif
 
-    if( currTestMode.type == ETM_INTER_ME )
+    if( currTestMode.type == ETM_INTER_ME )//帧间运动估计
     {
       if( ( currTestMode.opts & ETO_IMV ) != 0 )
       {
@@ -769,7 +771,7 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, CodingStructure*& bestCS, Par
     {
       xCheckRDCostMergeGeo2Nx2N( tempCS, bestCS, partitioner, currTestMode );
     }
-    else if( currTestMode.type == ETM_INTRA )
+    else if( currTestMode.type == ETM_INTRA )//帧内预测
     {
       if (slice.getSPS()->getUseColorTrans() && !CS::isDualITree(*tempCS))
       {
@@ -805,11 +807,11 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, CodingStructure*& bestCS, Par
         xCheckRDCostIntra(tempCS, bestCS, partitioner, currTestMode, false);
       }
     }
-    else if (currTestMode.type == ETM_PALETTE)
+    else if (currTestMode.type == ETM_PALETTE)//调试版模式
     {
       xCheckPLT( tempCS, bestCS, partitioner, currTestMode );
     }
-    else if (currTestMode.type == ETM_IBC)
+    else if (currTestMode.type == ETM_IBC)//Intra Block Copy
     {
       xCheckRDCostIBCMode(tempCS, bestCS, partitioner, currTestMode);
     }
@@ -824,16 +826,16 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, CodingStructure*& bestCS, Par
         splitmode = bestCS->cus[0]->splitSeries;
       }
       assert( partitioner.modeType == tempCS->modeType );
-      int signalModeConsVal = tempCS->signalModeCons( getPartSplit( currTestMode ), partitioner, modeTypeParent );
-      int numRoundRdo = signalModeConsVal == LDT_MODE_TYPE_SIGNAL ? 2 : 1;
+      int signalModeConsVal = tempCS->signalModeCons( getPartSplit( currTestMode ), partitioner, modeTypeParent );//帧内帧间等，mode_type继承方式
+      int numRoundRdo = signalModeConsVal == LDT_MODE_TYPE_SIGNAL ? 2 : 1;//RDO轮数：mode_type由继承或推断得到，只需进行一轮RDO；否则需要进行两轮RDO
       bool skipInterPass = false;
-      for( int i = 0; i < numRoundRdo; i++ )
+      for( int i = 0; i < numRoundRdo; i++ )//check all possible RDO rounds
       {
         //change cons modes
         if( signalModeConsVal == LDT_MODE_TYPE_SIGNAL )
         {
           CHECK( numRoundRdo != 2, "numRoundRdo shall be 2 - [LDT_MODE_TYPE_SIGNAL]" );
-          tempCS->modeType = partitioner.modeType = (i == 0) ? MODE_TYPE_INTER : MODE_TYPE_INTRA;
+          tempCS->modeType = partitioner.modeType = (i == 0) ? MODE_TYPE_INTER : MODE_TYPE_INTRA;//先CHECK INTER 在INTRA
         }
         else if( signalModeConsVal == LDT_MODE_TYPE_INFER )
         {
@@ -861,7 +863,7 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, CodingStructure*& bestCS, Par
           }
         }
 
-        xCheckModeSplit( tempCS, bestCS, partitioner, currTestMode, modeTypeParent, skipInterPass );
+        xCheckModeSplit( tempCS, bestCS, partitioner, currTestMode, modeTypeParent, skipInterPass );//ready to check
         //recover cons modes
         tempCS->modeType = partitioner.modeType = modeTypeParent;
         tempCS->treeType = partitioner.treeType = treeTypeParent;
@@ -1232,7 +1234,7 @@ void EncCu::xCheckModeSplit(CodingStructure *&tempCS, CodingStructure *&bestCS, 
   const TempCtx ctxStartMC( m_CtxCache, SubCtx( Ctx::ModeConsFlag, m_CABACEstimator->getCtx() ) );
   m_CABACEstimator->resetBits();
 
-  m_CABACEstimator->split_cu_mode( split, *tempCS, partitioner );
+  m_CABACEstimator->split_cu_mode( split, *tempCS, partitioner );//
   m_CABACEstimator->mode_constraint( split, *tempCS, partitioner, modeTypeChild );
 
   const double factor = ( tempCS->currQP[partitioner.chType] > 30 ? 1.1 : 1.075 );
@@ -1294,7 +1296,7 @@ void EncCu::xCheckModeSplit(CodingStructure *&tempCS, CodingStructure *&bestCS, 
     m_pcInterSearch->savePrevUniMvInfo(tempCS->area.Y(), tmpUniMvInfo, isUniMvInfoSaved);
   }
 
-  do
+  do//check sub cu
   {
     const auto &subCUArea  = partitioner.currArea();
 
@@ -1311,7 +1313,7 @@ void EncCu::xCheckModeSplit(CodingStructure *&tempCS, CodingStructure *&bestCS, 
       tempSubCS->bestParent = bestSubCS->bestParent = bestCS;
       double newMaxCostAllowed = isLuma(partitioner.chType) ? std::min(encTestMode.maxCostAllowed, bestCS->cost - m_pcRdCost->calcRdCost(tempCS->fracBits, tempCS->dist)) : MAX_DOUBLE;
       newMaxCostAllowed = std::max(0.0, newMaxCostAllowed);
-      xCompressCU(tempSubCS, bestSubCS, partitioner, newMaxCostAllowed);
+      xCompressCU(tempSubCS, bestSubCS, partitioner, newMaxCostAllowed);//ohhhhhhhhhhhhhhhhhhhhhhhh~~Recur!!
       tempSubCS->bestParent = bestSubCS->bestParent = nullptr;
 
       if( bestSubCS->cost == MAX_DOUBLE )
