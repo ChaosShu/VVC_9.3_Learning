@@ -1120,6 +1120,7 @@ void EncModeCtrlMTnoRQT::initCTUEncoding( const Slice &slice )
   }
 }
 
+/*初始化CU相关信息*/
 void EncModeCtrlMTnoRQT::initCULevel( Partitioner &partitioner, const CodingStructure& cs )
 {
   // Min/max depth
@@ -1134,7 +1135,7 @@ void EncModeCtrlMTnoRQT::initCULevel( Partitioner &partitioner, const CodingStru
     }
   }
 
-  m_ComprCUCtxList.push_back( ComprCUCtx( cs, minDepth, maxDepth, NUM_EXTRA_FEATURES ) );
+  m_ComprCUCtxList.push_back( ComprCUCtx( cs, minDepth, maxDepth, NUM_EXTRA_FEATURES ) );//push LCU进入
 
 #if ENABLE_SPLIT_PARALLELISM
   if( m_runNextInParallel )
@@ -1224,11 +1225,12 @@ void EncModeCtrlMTnoRQT::initCULevel( Partitioner &partitioner, const CodingStru
   //////////////////////////////////////////////////////////////////////////
   // Add unit split modes
 
+  /*QT & TT*/
   if( !cuECtx.get<bool>( QT_BEFORE_BT ) )
-  {
+  {// qt after bt
     for( int qp = maxQP; qp >= minQP; qp-- )
     {
-      m_ComprCUCtxList.back().testModes.push_back( { ETM_SPLIT_QT, ETO_STANDARD, qp } );
+      m_ComprCUCtxList.back().testModes.push_back( { ETM_SPLIT_QT, ETO_STANDARD, qp } );//连QP都会作为参数进行RDO了吗？
     }
   }
 
@@ -1253,6 +1255,7 @@ void EncModeCtrlMTnoRQT::initCULevel( Partitioner &partitioner, const CodingStru
   int minQPq = minQP;
   int maxQPq = maxQP;
   xGetMinMaxQP( minQP, maxQP, cs, partitioner, baseQP, *cs.sps, *cs.pps, CU_BT_SPLIT );
+  /*BT*/
   if( partitioner.canSplit( CU_VERT_SPLIT, cs ) )
   {
     // add split modes
@@ -1260,7 +1263,7 @@ void EncModeCtrlMTnoRQT::initCULevel( Partitioner &partitioner, const CodingStru
     {
       m_ComprCUCtxList.back().testModes.push_back( { ETM_SPLIT_BT_V, ETO_STANDARD, qp } );
     }
-    m_ComprCUCtxList.back().set( DID_VERT_SPLIT, true );
+    m_ComprCUCtxList.back().set( DID_VERT_SPLIT, true );//设置标志
   }
   else
   {
@@ -1289,7 +1292,7 @@ void EncModeCtrlMTnoRQT::initCULevel( Partitioner &partitioner, const CodingStru
     }
   }
 
-  m_ComprCUCtxList.back().testModes.push_back( { ETM_POST_DONT_SPLIT } );
+  m_ComprCUCtxList.back().testModes.push_back( { ETM_POST_DONT_SPLIT } );//DONT_SPLIT Is first
 
   xGetMinMaxQP( minQP, maxQP, cs, partitioner, baseQP, *cs.sps, *cs.pps, CU_DONT_SPLIT );
 
@@ -1306,11 +1309,11 @@ void EncModeCtrlMTnoRQT::initCULevel( Partitioner &partitioner, const CodingStru
   }
   else if( partitioner.isConsInter() )
   {
-    tryIntraRdo = tryIBCRdo = false;
+    tryIntraRdo = tryIBCRdo = false;//IBC仅限于帧内
   }
   checkIbc &= tryIBCRdo;
 
-  for( int qpLoop = maxQP; qpLoop >= minQP; qpLoop-- )
+  for( int qpLoop = maxQP; qpLoop >= minQP; qpLoop-- )//why always qp loop
   {
     const int  qp       = std::max( qpLoop, lowestQP );
 #if REUSE_CU_RESULTS

@@ -61,7 +61,7 @@ enum EncTestModeType
   ETM_AFFINE,
   ETM_MERGE_GEO,
   ETM_INTRA,
-  ETM_PALETTE,
+  ETM_PALETTE,//调色板模式
   ETM_SPLIT_QT,
   ETM_SPLIT_BT_H,
   ETM_SPLIT_BT_V,
@@ -169,7 +169,7 @@ inline EncTestMode getCSEncMode( const CodingStructure& cs )
 // EncModeCtrl controls if specific modes should be tested
 //////////////////////////////////////////////////////////////////////////
 
-struct ComprCUCtx
+struct ComprCUCtx//存储一个CU在compress时所有数据
 {
   ComprCUCtx() : testModes(), extraFeatures()
   {
@@ -232,7 +232,7 @@ struct ComprCUCtx
   unsigned                          minDepth;
   unsigned                          maxDepth;
   unsigned                          cuX, cuY, cuW, cuH, partIdx;
-  std::vector<EncTestMode>          testModes;
+  std::vector<EncTestMode>          testModes;//动态内存，存储CU会check的所有模式
   EncTestMode                       lastTestMode;
   bool                              earlySkip;
   bool                              isHashPerfectMatch;
@@ -285,7 +285,7 @@ protected:
   int                   m_lumaQPOffset;
 #endif
   bool                  m_fastDeltaQP;
-  static_vector<ComprCUCtx, ( MAX_CU_DEPTH << 2 )> m_ComprCUCtxList;
+  static_vector<ComprCUCtx, ( MAX_CU_DEPTH << 2 )> m_ComprCUCtxList;//存储CTU中所有CU的在compress过程中的数据
 #if ENABLE_SPLIT_PARALLELISM
   int                   m_runNextInParallel;
 #endif

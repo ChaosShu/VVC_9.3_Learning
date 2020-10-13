@@ -2,12 +2,62 @@ VTM reference software for VVC
 ==============================
 
 
-
+*前缀、后缀、缩写*
 
 ---p        :pointer    ;指针
 ---c        :const,class    ;静态，类
 ---i        :int    ;int型
 
+-PLT- PaLetTe 调色板模式(SCC)
+-SBT- Sub-Block Transform
+
+*常见数据结构*
+#CS
+包含cus,pus,tus,三个vector<* ~>，应该是指向其内部的CU，PU，TU
+应该对应于某个区域UnitArea
+
+#Partitioner
+应该对应于某个CTU
+
+#ComprCUCtx
+存储一个CU在compress时各种数据
+
+#m_ComprCUCtxList
+存储CTU内所有CU在compress时各种数据
+
+#EncModeCtrl
+模式控制类
+
+
+*常见（可能会用到）函数*
+
+
+#Slice::getCtuAddrInSlice(ctuIdx);
+
+#CS::getCURestricted(offsetPOS, currPOS, currSlice, currTile, chType)
+example:   const CodingUnit* cuLeft        = cs.getCURestricted( pos.offset( -1,                               0 ), pos, curSliceIdx, curTileIdx, chType );
+  const CodingUnit* cuBelowLeft   = cs.getCURestricted( pos.offset( -1, currArea().blocks[chType].height), pos, curSliceIdx, curTileIdx, chType );
+
+#CS::getCU(pos, partitioner)
+
+
+#EncCU::CompressCtu(CodingStructure, UnitArea, ctuRsAddr,prevQP[], currQP[])
+传入CTU对应的CS，UnitArea以及S=CTU绝对地址和两个QP数组
+此函数中，创建一个Partitioner；创建一个相同大小的tempCS和bestCU，传入xCompressCU并修改值，将tempCS和bestCS设为传入参数CS的sub-CS
+调用xCompressCU, xCompressCU形成递归。并将最终的bestCS划分一级一级传入其父CS（*注意，VVC的结构是把划分与预测当中一种类型，在这些类型中switch，选择CU需要进行的操作，如帧内预测、帧间预测、SKIP、划分决策等等*）
+
+#EncCU::xCompressCU(tempCS, bestCS, Partitioner)
+传入当前CS的sub tempCS和bestCS，以及当前CS的Partitioner
+
+#adaptiveDepthPartitioner::setMaxMinDepth(min, max, cs)
+限制划分深度,传入min，max并更新
+
+#inline PartSplit getPartSplit( encTestmode )
+根据encTestMode.type确定划分类型
+
+*我要死死死死死死死死死了的函数*
+#CABACWriter::split_cu_mode（）
+What the fuck is：
 
 
 

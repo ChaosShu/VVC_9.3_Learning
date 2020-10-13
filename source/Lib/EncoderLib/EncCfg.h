@@ -341,7 +341,7 @@ protected:
   int       m_MmvdDisNum;
   bool      m_rgbFormat;
   bool      m_useColorTrans;
-  unsigned  m_PLTMode;
+  unsigned  m_PLTMode;//palette 调色板模式
   bool      m_JointCbCrMode;
   unsigned  m_IBCMode;
   unsigned  m_IBCLocalSearchRangeX;
@@ -1142,6 +1142,7 @@ public:
   bool      getUseEncDbOpt                  () const             { return m_encDbOpt; }
 
   void      setUseFastLCTU                  ( bool  n )      { m_useFastLCTU = n; }
+  /*fast large ctu?*/
   bool      getUseFastLCTU                  () const         { return m_useFastLCTU; }
   void      setUseFastMerge                 ( bool  n )      { m_useFastMrg = n; }
   bool      getUseFastMerge                 () const         { return m_useFastMrg; }

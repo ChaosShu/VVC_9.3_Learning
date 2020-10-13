@@ -1515,7 +1515,7 @@ void EncSlice::encodeCtus( Picture* pcPic, const bool bCompressEntireSlice, cons
     }
   }
 
-  // for every CTU in the slice
+  // ******************** for every CTU in the slice
   for( uint32_t ctuIdx = 0; ctuIdx < pcSlice->getNumCtuInSlice(); ctuIdx++ )
   {
     const int32_t ctuRsAddr = pcSlice->getCtuAddrInSlice( ctuIdx );
