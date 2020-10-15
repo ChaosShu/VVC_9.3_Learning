@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="NameAndType">
+  <Class Name="Partitioner">
+    <Position X="1.5" Y="0.5" Width="3.25" />
+    <TypeIdentifier>
+      <HashCode>ABQIEB4IAgCAAACAEQARAACAQEAMCACAkBBAwAkKAgA=</HashCode>
+      <FileName>D:\实验室工作\VVC_9.3_Learning\source\Lib\CommonLib\UnitPartitioner.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AdaptiveDepthPartitioner">
+    <Position X="5.5" Y="4" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\实验室工作\VVC_9.3_Learning\source\Lib\CommonLib\UnitPartitioner.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="QTBTPartitioner">
+    <Position X="5.5" Y="6" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAQAABQAAAAAAAAAAAAAAACAAAAACACAAAAAQAACAAA=</HashCode>
+      <FileName>D:\实验室工作\VVC_9.3_Learning\source\Lib\CommonLib\UnitPartitioner.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TUIntraSubPartitioner">
+    <Position X="5.5" Y="0.5" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAQAABQAAAAAAAAAAAAAAACAAgAACACAAAAAQAACAAA=</HashCode>
+      <FileName>D:\实验室工作\VVC_9.3_Learning\source\Lib\CommonLib\UnitPartitioner.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="PartLevel">
+    <Position X="9" Y="0.5" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAEAAEAAAAAAABEBAAAAAAEAQAAAIIAhg=</HashCode>
+      <FileName>D:\实验室工作\VVC_9.3_Learning\source\Lib\CommonLib\UnitPartitioner.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Typedef Name="Partitioning" Collapsed="true">
+    <Position X="9" Y="5" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\实验室工作\VVC_9.3_Learning\source\Lib\CommonLib\UnitPartitioner.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="PartitioningStack" Collapsed="true">
+    <Position X="9" Y="5.75" Width="4.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\实验室工作\VVC_9.3_Learning\source\Lib\CommonLib\UnitPartitioner.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Enum Name="PartSplit" Collapsed="true">
+    <Position X="9" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IEAhAAAACAAAAgYABAAgAAaEAAAQAAAAAAAQEIAUAkA=</HashCode>
+      <FileName>D:\实验室工作\VVC_9.3_Learning\source\Lib\CommonLib\UnitPartitioner.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Microsoft YaHei UI" Size="9" />
+</ClassDiagram>

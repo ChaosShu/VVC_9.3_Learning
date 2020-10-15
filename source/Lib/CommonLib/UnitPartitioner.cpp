@@ -168,6 +168,7 @@ void Partitioner::copyState( const Partitioner& other )
 // AdaptiveDepthPartitioner class
 //////////////////////////////////////////////////////////////////////////
 
+/*can't figure it out*/
 void AdaptiveDepthPartitioner::setMaxMinDepth( unsigned& minDepth, unsigned& maxDepth, const CodingStructure& cs ) const
 {
   unsigned          stdMinDepth = 0;/* **->normal/standard min depth */
@@ -278,9 +279,9 @@ void QTBTPartitioner::splitCurrArea( const PartSplit split, const CodingStructur
   bool qgChromaEnable = currQgChromaEnable();
 
   switch( split )
-  {
+  {//push in stack per depth
   case CU_QUAD_SPLIT:
-    m_partStack.push_back( PartLevel( split, PartitionerImpl::getCUSubPartitions( currArea(), cs ) ) );
+    m_partStack.push_back( PartLevel( split, PartitionerImpl::getCUSubPartitions( currArea(), cs ) ) );//param3默认是QUAD
     m_partStack.back().modeType = modeType;
     break;
   case CU_HORZ_SPLIT:
@@ -311,7 +312,7 @@ void QTBTPartitioner::splitCurrArea( const PartSplit split, const CodingStructur
     break;
   }
 
-  currDepth++;
+  currDepth++;//partitioner的 (MT + QT) depth
   currSubdiv++;
 #if _DEBUG
   m_currArea = m_partStack.back().parts.front();
@@ -331,8 +332,8 @@ void QTBTPartitioner::splitCurrArea( const PartSplit split, const CodingStructur
   }
 
   if( split == CU_HORZ_SPLIT || split == CU_VERT_SPLIT || split == CU_TRIH_SPLIT || split == CU_TRIV_SPLIT )
-  {
-    currBtDepth++;
+  {//DEBUG TO  OBSERVE  THE  FUNCTION
+    currBtDepth++;// MT AFTER BT?
     if( isImplicit ) currImplicitBtDepth++;
     currMtDepth++;
 
@@ -565,13 +566,13 @@ PartSplit QTBTPartitioner::getImplicitSplit( const CodingStructure &cs )
 
   return split;
 }
-
+/*重写基类-virtual void- Partitioner::exitCurrSplit()*/
 void QTBTPartitioner::exitCurrSplit()
 {
   PartSplit currSplit = m_partStack.back().split;
   unsigned  currIdx = m_partStack.back().idx;
 
-  m_partStack.pop_back();
+  m_partStack.pop_back();//pop出当前partlevel
 
   CHECK( currDepth == 0, "depth is '0', although a split was performed" );
   currDepth--;
@@ -768,6 +769,7 @@ bool TUIntraSubPartitioner::canSplit( const PartSplit split, const CodingStructu
 // Partitioner methods describing the actual partitioning logic
 //////////////////////////////////////////////////////////////////////////
 
+/*---return a  patitoning(vector<UnitArea> contains n sub UnitArea)*/
 Partitioning PartitionerImpl::getCUSubPartitions( const UnitArea &cuArea, const CodingStructure &cs, const PartSplit _splitType /*= CU_QUAD_SPLIT*/ )
 {
   const PartSplit splitType = _splitType;
@@ -778,7 +780,7 @@ Partitioning PartitionerImpl::getCUSubPartitions( const UnitArea &cuArea, const 
     {
       Partitioning sub;
 
-      sub.resize( 4, cuArea );
+      sub.resize( 4, cuArea );//划分成4个sub,怎么实现不知道
 
       for( uint32_t i = 0; i < 4; i++ )
       {
@@ -786,8 +788,8 @@ Partitioning PartitionerImpl::getCUSubPartitions( const UnitArea &cuArea, const 
         {
           blk.height >>= 1;
           blk.width  >>= 1;
-          if( i >= 2 ) blk.y += blk.height;
-          if( i &  1 ) blk.x += blk.width;
+          if( i >= 2 ) blk.y += blk.height;//2，3块
+          if( i &  1 ) blk.x += blk.width;//1，3块
         }
 
         CHECK( sub[i].lumaSize().height < MIN_TB_SIZEY, "the split causes the block to be smaller than the minimal TU size" );

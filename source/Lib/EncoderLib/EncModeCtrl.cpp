@@ -81,6 +81,9 @@ void EncModeCtrl::setEarlySkipDetected()
   m_ComprCUCtxList.back().earlySkip = true;
 }
 
+//\function: 提取cs的dis, fracBits, cost;
+//\function: 提取encTestmode的type，opts;
+//并将这些特征存入cs.features
 void EncModeCtrl::xExtractFeatures( const EncTestMode encTestmode, CodingStructure& cs )
 {
   CHECK( cs.features.size() < NUM_ENC_FEATURES, "Features vector is not initialized" );
@@ -2009,11 +2012,11 @@ bool EncModeCtrlMTnoRQT::checkSkipOtherLfnst( const EncTestMode& encTestmode, Co
 
 bool EncModeCtrlMTnoRQT::useModeResult( const EncTestMode& encTestmode, CodingStructure*& tempCS, Partitioner& partitioner )
 {
-  xExtractFeatures( encTestmode, *tempCS );
+  xExtractFeatures( encTestmode, *tempCS );//提取param1 和 param2 的一些参数更新到param2.
 
   ComprCUCtx& cuECtx = m_ComprCUCtxList.back();
 
-
+  /*   set the correspond cost  for MT */
   if(      encTestmode.type == ETM_SPLIT_BT_H )
   {
     cuECtx.set( BEST_HORZ_SPLIT_COST, tempCS->cost );
@@ -2030,7 +2033,8 @@ bool EncModeCtrlMTnoRQT::useModeResult( const EncTestMode& encTestmode, CodingSt
   {
     cuECtx.set( BEST_TRIV_SPLIT_COST, tempCS->cost );
   }
-  else if( encTestmode.type == ETM_INTRA )
+  /*   set the correspond cost  for INTRA */
+  else if( encTestmode.type == ETM_INTRA )// intra 模式 只有一个CU
   {
     const CodingUnit cu = *tempCS->getCU( partitioner.chType );
 
@@ -2063,7 +2067,7 @@ bool EncModeCtrlMTnoRQT::useModeResult( const EncTestMode& encTestmode, CodingSt
       }
     }
   }
-
+  /*   set the correspond cost  for QT */
   if( encTestmode.type == ETM_SPLIT_QT )
   {
     int maxQtD = 0;

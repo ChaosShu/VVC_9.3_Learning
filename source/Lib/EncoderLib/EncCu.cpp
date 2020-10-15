@@ -496,9 +496,9 @@ bool EncCu::xCheckBestMode( CodingStructure *&tempCS, CodingStructure *&bestCS, 
 {
   bool bestCSUpdated = false;
 
-  if( !tempCS->cus.empty() )
+  if( !tempCS->cus.empty() )//tempCS内do包含CU
   {
-    if( tempCS->cus.size() == 1 )
+    if( tempCS->cus.size() == 1 )//一个CU即不划分
     {
       const CodingUnit& cu = *tempCS->cus.front();
       CHECK( cu.skip && !cu.firstPU->mergeFlag, "Skip flag without a merge flag is not allowed!" );
@@ -513,7 +513,7 @@ bool EncCu::xCheckBestMode( CodingStructure *&tempCS, CodingStructure *&bestCS, 
     if( m_modeCtrl->useModeResult( encTestMode, tempCS, partitioner ) )
     {
 
-      std::swap( tempCS, bestCS );
+      std::swap( tempCS, bestCS );//直接就交换 tempCS 和 bestCS 了？
       // store temp best CI for next CU coding
       m_CurrCtx->best = m_CABACEstimator->getCtx();
       m_bestModeUpdated = true;
@@ -1218,8 +1218,8 @@ void EncCu::xCheckModeSplit(CodingStructure *&tempCS, CodingStructure *&bestCS, 
 #endif
   const auto oldPLT           = tempCS->prevPLT;
 
-  const PartSplit split = getPartSplit( encTestMode );
-  const ModeType modeTypeChild = partitioner.modeType;
+  const PartSplit split = getPartSplit( encTestMode );//根据encTestMode获取划分方式
+  const ModeType modeTypeChild = partitioner.modeType;//获取子块的modeType
 
   CHECK( split == CU_DONT_SPLIT, "No proper split provided!" );
 
@@ -1278,8 +1278,8 @@ void EncCu::xCheckModeSplit(CodingStructure *&tempCS, CodingStructure *&bestCS, 
   }
 
 
-  partitioner.splitCurrArea( split, *tempCS );
-  bool qgEnableChildren = partitioner.currQgEnable(); // QG possible at children level
+  partitioner.splitCurrArea( split, *tempCS );//应该是   根据 split 修改partitioner（将新的东西入栈）
+  bool qgEnableChildren = partitioner.currQgEnable();// QG possible at children level
 
   m_CurrCtx++;
 
@@ -1296,13 +1296,13 @@ void EncCu::xCheckModeSplit(CodingStructure *&tempCS, CodingStructure *&bestCS, 
     m_pcInterSearch->savePrevUniMvInfo(tempCS->area.Y(), tmpUniMvInfo, isUniMvInfoSaved);
   }
 
-  do//check sub cu
+  do   //check sub cu   
   {
     const auto &subCUArea  = partitioner.currArea();
 
     if( tempCS->picture->Y().contains( subCUArea.lumaPos() ) )
     {
-      const unsigned wIdx    = gp_sizeIdxInfo->idxFrom( subCUArea.lwidth () );
+      const unsigned wIdx    = gp_sizeIdxInfo->idxFrom( subCUArea.lwidth () );//size to idx mapping
       const unsigned hIdx    = gp_sizeIdxInfo->idxFrom( subCUArea.lheight() );
 
       CodingStructure *tempSubCS = m_pTempCS[wIdx][hIdx];
@@ -1314,16 +1314,18 @@ void EncCu::xCheckModeSplit(CodingStructure *&tempCS, CodingStructure *&bestCS, 
       double newMaxCostAllowed = isLuma(partitioner.chType) ? std::min(encTestMode.maxCostAllowed, bestCS->cost - m_pcRdCost->calcRdCost(tempCS->fracBits, tempCS->dist)) : MAX_DOUBLE;
       newMaxCostAllowed = std::max(0.0, newMaxCostAllowed);
       xCompressCU(tempSubCS, bestSubCS, partitioner, newMaxCostAllowed);//ohhhhhhhhhhhhhhhhhhhhhhhh~~Recur!!
+      
+      //check完当前CU下的某个split_type：
       tempSubCS->bestParent = bestSubCS->bestParent = nullptr;
 
-      if( bestSubCS->cost == MAX_DOUBLE )
-      {
-        CHECK( split == CU_QUAD_SPLIT, "Split decision reusing cannot skip quad split" );
+      if( bestSubCS->cost == MAX_DOUBLE )//______(???)
+      {//为什么一直进不来
+        CHECK( split == CU_QUAD_SPLIT, "Split decision reusing cannot skip quad split" );//第一个四叉树应该是不能跳过的
         tempCS->cost = MAX_DOUBLE;
         tempCS->costDbOffset = 0;
         tempCS->useDbCost = m_pcEncCfg->getUseEncDbOpt();
         m_CurrCtx--;
-        partitioner.exitCurrSplit();
+        partitioner.exitCurrSplit();//退出（结束）当前CU的划分
         xCheckBestMode( tempCS, bestCS, partitioner, encTestMode );
         if( partitioner.chType == CHANNEL_TYPE_LUMA )
         {
@@ -1354,7 +1356,7 @@ void EncCu::xCheckModeSplit(CodingStructure *&tempCS, CodingStructure *&bestCS, 
         }
       }
 
-      tempSubCS->releaseIntermediateData();
+      tempSubCS->releaseIntermediateData();//释放 中间数据
       bestSubCS->releaseIntermediateData();
       if( !tempCS->slice->isIntra() && partitioner.isConsIntra() )
       {
@@ -1376,7 +1378,7 @@ void EncCu::xCheckModeSplit(CodingStructure *&tempCS, CodingStructure *&bestCS, 
     }
   } while( partitioner.nextPart( *tempCS ) );
 
-  partitioner.exitCurrSplit();
+  partitioner.exitCurrSplit();//结束CU内部的划分决策
 
 
   m_CurrCtx--;

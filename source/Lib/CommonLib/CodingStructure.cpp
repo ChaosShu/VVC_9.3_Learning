@@ -443,7 +443,8 @@ const TransformUnit * CodingStructure::getTU( const Position &pos, const Channel
     else                 return nullptr;
   }
 }
-
+/*__为*this CS添加一个与param1对应的CU
+  opts：将param1对应的UnitArea的param2分量分配一个CU，该CU属于*this CS,*/
 CodingUnit& CodingStructure::addCU( const UnitArea &unit, const ChannelType chType )
 {
   CodingUnit *cu = m_cuCache.get();
@@ -1074,7 +1075,7 @@ void CodingStructure::initSubStructure( CodingStructure& subStruct, const Channe
   {
     CHECKD( area != subStruct.area, "Trying to init sub-structure for TU-encoding of incompatible size" );
 
-    for( const auto &pcu : cus )
+    for( const auto &pcu : cus )//为subCS添加其所包含的CU，此处应该是把parentCS的CU都传输给subCS了
     {
       CodingUnit &cu = subStruct.addCU( *pcu, _chType );
 
@@ -1096,26 +1097,27 @@ void CodingStructure::initSubStructure( CodingStructure& subStruct, const Channe
   }
 }
 
+/*copy pred,reco,resi，cu, pu, tu等信息到*this CS的对应位置，*/
 void CodingStructure::useSubStructure( const CodingStructure& subStruct, const ChannelType chType, const UnitArea &subArea, const bool cpyPred /*= true*/, const bool cpyReco /*= true*/, const bool cpyOrgResi /*= true*/, const bool cpyResi /*= true*/, const bool updateCost /*= true*/ )
 {
   UnitArea clippedArea = clipArea( subArea, *picture );
 
-  setDecomp( clippedArea );
+  setDecomp( clippedArea );//可能是设置UnitArea中的各分量？
 
   CPelUnitBuf subPredBuf = cpyPred ? subStruct.getPredBuf( clippedArea ) : CPelUnitBuf();
   CPelUnitBuf subResiBuf = cpyResi ? subStruct.getResiBuf( clippedArea ) : CPelUnitBuf();
   CPelUnitBuf subRecoBuf = cpyReco ? subStruct.getRecoBuf( clippedArea ) : CPelUnitBuf();
 
-  if( parent )
+  if( parent )//如果有父CS？
   {
     // copy data to picture
-    if( cpyPred )    getPredBuf   ( clippedArea ).copyFrom( subPredBuf );
+    if( cpyPred )    getPredBuf   ( clippedArea ).copyFrom( subPredBuf );//将subCS的块复制到parentCS中
     if( cpyResi )    getResiBuf   ( clippedArea ).copyFrom( subResiBuf );
     if( cpyReco )    getRecoBuf   ( clippedArea ).copyFrom( subRecoBuf );
     if( cpyOrgResi ) getOrgResiBuf( clippedArea ).copyFrom( subStruct.getOrgResiBuf( clippedArea ) );
   }
 
-  if( cpyPred ) picture->getPredBuf( clippedArea ).copyFrom( subPredBuf );
+  if( cpyPred ) picture->getPredBuf( clippedArea ).copyFrom( subPredBuf );//将subCS的块复制到picture中
   if( cpyResi ) picture->getResiBuf( clippedArea ).copyFrom( subResiBuf );
   if( cpyReco ) picture->getRecoBuf( clippedArea ).copyFrom( subRecoBuf );
 
