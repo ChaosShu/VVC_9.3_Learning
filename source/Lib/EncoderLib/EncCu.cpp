@@ -215,7 +215,11 @@ EncCu::~EncCu()
 {
 }
 
-
+//void EncCu::ccResetTestMode(CodingStructure *&cs, Partitioner &partitioner)
+//{
+//  //首先需要一个vector存信息
+//  vector<EncTestMode> currTes
+//}
 
 /** \param    pcEncLib      pointer of encoder class
  */
@@ -675,7 +679,7 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
       tempCS->firstColorSpaceTestOnly = bestCS->firstColorSpaceTestOnly = true;
     }
   }
-
+  /*添加快速算法的代码，添加resetTestMode(cs,)*/
   do//check CU 的每个 testmode
   {
     for (int i = compBegin; i < (compBegin + numComp); i++) // 对于CU每个possible的分量（根据之前的规则已确定好）
@@ -1295,7 +1299,7 @@ void EncCu::xCheckModeSplit(CodingStructure *&tempCS, CodingStructure *&bestCS, 
   {
     m_pcInterSearch->savePrevUniMvInfo(tempCS->area.Y(), tmpUniMvInfo, isUniMvInfoSaved);
   }
-
+  /*************************    check sub cu    *************************/
   do   //check sub cu   
   {
     const auto &subCUArea  = partitioner.currArea();
@@ -1378,7 +1382,7 @@ void EncCu::xCheckModeSplit(CodingStructure *&tempCS, CodingStructure *&bestCS, 
     }
   } while( partitioner.nextPart( *tempCS ) );
 
-  partitioner.exitCurrSplit();//结束CU内部的划分决策
+  partitioner.exitCurrSplit();//结束CU内部的划分决策,pop出当前partLevel
 
 
   m_CurrCtx--;
@@ -1500,7 +1504,7 @@ void EncCu::xCheckModeSplit(CodingStructure *&tempCS, CodingStructure *&bestCS, 
       unsigned minDepth = 0;
       unsigned maxDepth = floorLog2(tempCS->sps->getCTUSize()) - floorLog2(tempCS->sps->getMinQTSize(slice.getSliceType(), partitioner.chType));
 
-      if( auto ad = dynamic_cast<AdaptiveDepthPartitioner*>( &partitioner ) )
+      if( auto ad = dynamic_cast<AdaptiveDepthPartitioner*>( &partitioner ) )//read class (partitioner) as class(AdaptiveDepthPartitioner)
       {
         ad->setMaxMinDepth( minDepth, maxDepth, *tempCS );
       }

@@ -168,7 +168,12 @@ void Partitioner::copyState( const Partitioner& other )
 // AdaptiveDepthPartitioner class
 //////////////////////////////////////////////////////////////////////////
 
-/*can't figure it out*/
+
+/**CHANGE param1 and parma2 according to info from param3
+ * param: mindepth
+ * param: maxDepth
+ * param: cs(ctx)
+*/
 void AdaptiveDepthPartitioner::setMaxMinDepth( unsigned& minDepth, unsigned& maxDepth, const CodingStructure& cs ) const
 {
   unsigned          stdMinDepth = 0;/* **->normal/standard min depth */
