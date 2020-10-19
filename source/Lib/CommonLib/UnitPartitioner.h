@@ -43,7 +43,7 @@
 #include "CommonDef.h"
 
 static_assert( MAX_CU_TILING_PARTITIONS >= 4, "Minimum required number of partitions for the Partitioning type is 4!" );
-typedef std::vector <UnitArea> Partitioning;
+typedef std::vector <UnitArea> Partitioning;//vector<UnitArea>
 
 //////////////////////////////////////////////////////////////////////////
 // PartManager class - manages the partitioning tree
@@ -102,7 +102,7 @@ struct PartLevel
 };
 
 // set depending on max QT / BT possibilities
-typedef static_vector<PartLevel, 2 * MAX_CU_DEPTH + 1> PartitioningStack;
+typedef static_vector<PartLevel, 2 * MAX_CU_DEPTH + 1> PartitioningStack;//store per depth
 
 class Partitioner
 {

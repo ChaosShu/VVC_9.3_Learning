@@ -233,14 +233,13 @@ int main(int argc, char* argv[])
 
   // call encoding function per layer
   bool eos = false;
-  unsigned short GOP_cnt{ 0 };///@UpdatedBy:Chaos 
+  /*unsigned short GOP_cnt{ 0 };///@UpdatedBy:Chaos */
   
   while( !eos )
   { //while每执行一次，代表已编码完一整个GOP
-    // read GOP
-
-    GOP_cnt++;
-    std::cout << "Current GOP_idx:" << GOP_cnt << endl;///@UpdatedBy:Chaos  
+    //// read GOP
+    //GOP_cnt++;
+    //std::cout << "Current GOP_idx:" << GOP_cnt << endl;///@UpdatedBy:Chaos  
 
     bool keepLoop = true;
     while( keepLoop )
