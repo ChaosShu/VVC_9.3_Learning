@@ -148,21 +148,21 @@ void EncCu::create( EncCfg* encCfg )
 
 void EncCu::destroy()
 {
-  unsigned numWidths  = gp_sizeIdxInfo->numWidths();
+  unsigned numWidths = gp_sizeIdxInfo->numWidths();
   unsigned numHeights = gp_sizeIdxInfo->numHeights();
 
-  for( unsigned w = 0; w < numWidths; w++ )
+  for (unsigned w = 0; w < numWidths; w++)
   {
-    for( unsigned h = 0; h < numHeights; h++ )
+    for (unsigned h = 0; h < numHeights; h++)
     {
-      if( m_pBestCS[w][h] ) m_pBestCS[w][h]->destroy();
-      if( m_pTempCS[w][h] ) m_pTempCS[w][h]->destroy();
+      if (m_pBestCS[w][h]) m_pBestCS[w][h]->destroy();
+      if (m_pTempCS[w][h]) m_pTempCS[w][h]->destroy();
 
       delete m_pBestCS[w][h];
       delete m_pTempCS[w][h];
 
-      if( m_pBestCS2[w][h] ) m_pBestCS2[w][h]->destroy();
-      if( m_pTempCS2[w][h] ) m_pTempCS2[w][h]->destroy();
+      if (m_pBestCS2[w][h]) m_pBestCS2[w][h]->destroy();
+      if (m_pTempCS2[w][h]) m_pTempCS2[w][h]->destroy();
 
       delete m_pBestCS2[w][h];
       delete m_pTempCS2[w][h];
@@ -215,11 +215,43 @@ EncCu::~EncCu()
 {
 }
 
-//void EncCu::ccResetTestMode(CodingStructure *&cs, Partitioner &partitioner)
-//{
-//  //首先需要一个vector存信息
-//  vector<EncTestMode> currTes
-//}
+/*    Algorithm of early Termination   */
+bool EncCu::ccGetSplitFlag(CodingStructure*& tempCS, Partitioner& partitioner, bool& mtSplitFlag, bool& qtSplitFlag, double& adjDepth) const{
+  ;
+  return true;
+}
+
+void EncCu::ccGetSplitType(const EncTestMode &encTestMode, int &ccSplitType)
+{
+  switch (encTestMode.type)
+  {
+  case ETM_SPLIT_QT:ccSplitType = 0; break;
+  case ETM_SPLIT_BT_H:ccSplitType = 1; break;
+  case ETM_SPLIT_BT_V:ccSplitType = 2; break;
+  case ETM_SPLIT_TT_H:ccSplitType = 3; break;
+  case ETM_SPLIT_TT_V:ccSplitType = 4; break;
+  case ETM_INTRA:ccSplitType = 5; break;
+  default:
+    cerr << "SplitType illegal!!!!" << endl;
+  }
+}
+
+void EncCu::ccResetTestMode(CodingStructure *&tempCS, Partitioner &partitioner)
+{
+  //首先需要一个vector存信息
+  vector<EncTestMode> currTestModes = m_modeCtrl->getComprCUCtx().testModes;
+  const int currQTdepth = partitioner.currQtDepth;      //mark
+  const int currMTdepth = partitioner.currMtDepth;      //mark
+  const UnitArea currArea = clipArea(CS::getArea(*tempCS, tempCS->area, partitioner.chType), *tempCS->picture);
+  PelBuf picOri = tempCS->getOrgBuf(currArea).Y();
+  SizeType currW = currArea.lwidth();
+  SizeType currH = currArea.lheight();
+
+  bool mtSplitFlag{ true }, qtSplitFlag{ true };
+  double adjDepth{ 0 };
+  bool isSplitValid = ccGetSplitFlag(tempCS, partitioner, mtSplitFlag, qtSplitFlag, adjDepth);
+
+}
 
 /** \param    pcEncLib      pointer of encoder class
  */
@@ -500,7 +532,7 @@ bool EncCu::xCheckBestMode( CodingStructure *&tempCS, CodingStructure *&bestCS, 
 {
   bool bestCSUpdated = false;
 
-  if( !tempCS->cus.empty() )//tempCS内do包含CU
+  if( !tempCS->cus.empty() )//tempCS内包含CU
   {
     if( tempCS->cus.size() == 1 )//一个CU即不划分
     {
@@ -516,7 +548,7 @@ bool EncCu::xCheckBestMode( CodingStructure *&tempCS, CodingStructure *&bestCS, 
 
     if( m_modeCtrl->useModeResult( encTestMode, tempCS, partitioner ) )
     {
-
+      ccGetSplitType(encTestMode, tempCS->ccBestSplit);/* Chaos */
       std::swap( tempCS, bestCS );//直接就交换 tempCS 和 bestCS 了？
       // store temp best CI for next CU coding
       m_CurrCtx->best = m_CABACEstimator->getCtx();
@@ -680,6 +712,9 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
     }
   }
   /*添加快速算法的代码，添加resetTestMode(cs,)*/
+  
+  ccResetTestMode(tempCS,partitioner);
+
   do//check CU 的每个 testmode
   {
     for (int i = compBegin; i < (compBegin + numComp); i++) // 对于CU每个possible的分量（根据之前的规则已确定好）
@@ -688,7 +723,7 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
       tempCS->prevPLT.curPLTSize[comID] = curLastPLTSize[comID];
       memcpy(tempCS->prevPLT.curPLT[i], curLastPLT[i], curLastPLTSize[comID] * sizeof(Pel));
     }
-    EncTestMode currTestMode = m_modeCtrl->currTestMode();
+    EncTestMode currTestMode = m_modeCtrl->currTestMode();/* ................. */
     currTestMode.maxCostAllowed = maxCostAllowed;
 
     if (pps.getUseDQP() && partitioner.isSepTree(*tempCS) && isChroma( partitioner.chType ))
@@ -811,7 +846,7 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
         xCheckRDCostIntra(tempCS, bestCS, partitioner, currTestMode, false);
       }
     }
-    else if (currTestMode.type == ETM_PALETTE)//调试版模式
+    else if (currTestMode.type == ETM_PALETTE)//调se版模式
     {
       xCheckPLT( tempCS, bestCS, partitioner, currTestMode );
     }

@@ -73,6 +73,8 @@ class CodingStructure
 public:
 
   UnitArea         area;
+  /*Chaos*/
+  int ccBestSplit;
 
   Picture         *picture;
   CodingStructure *parent;
@@ -158,6 +160,7 @@ public:
 
   static_vector<double, NUM_ENC_FEATURES> features;
 
+
   double      cost;
   bool        useDbCost;
   double      costDbOffset;
@@ -189,6 +192,8 @@ public:
 
 private:
   void createInternals(const UnitArea& _unit, const bool isTopLayer, const bool isPLTused);
+
+
 
 public:
 
