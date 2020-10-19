@@ -1253,7 +1253,7 @@ public:
 
     m_cache.clear();
   }
-
+  //´Ó dynamic_cache ÖÐ·µ»Øback()
   T* get()
   {
     T* ret;

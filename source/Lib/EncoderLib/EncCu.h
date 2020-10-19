@@ -301,6 +301,7 @@ protected:
   void xCheckRDCostIBCModeMerge2Nx2N( CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &partitioner, const EncTestMode& encTestMode );
 
   void xCheckPLT              ( CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &partitioner, const EncTestMode& encTestMode );
+  //void ccResetTestMode(CodingStructure*& tempCS, Partitioner& partitioner);// my member function
 };
 
 //! \}
