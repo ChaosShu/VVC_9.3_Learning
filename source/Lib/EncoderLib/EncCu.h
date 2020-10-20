@@ -231,6 +231,9 @@ public:
 
   EncModeCtrl* getModeCtrl  () { return m_modeCtrl; }
 
+  /* Chaos */
+  bool ccGetSplitFlag(CodingStructure* &tempCS,Partitioner &partitioner, bool &mtSplitFlag, bool &qtSplitFlag, double &adjDepth) const;
+  void ccGetSplitType(const EncTestMode& encTestMode, int &ccSplitType);
 
   void   setMergeBestSATDCost(double cost) { m_mergeBestSATDCost = cost; }
   double getMergeBestSATDCost()            { return m_mergeBestSATDCost; }
@@ -301,7 +304,7 @@ protected:
   void xCheckRDCostIBCModeMerge2Nx2N( CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &partitioner, const EncTestMode& encTestMode );
 
   void xCheckPLT              ( CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &partitioner, const EncTestMode& encTestMode );
-  //void ccResetTestMode(CodingStructure*& tempCS, Partitioner& partitioner);// my member function
+  void ccResetTestMode(CodingStructure*& tempCS, Partitioner& partitioner);// my member function
 };
 
 //! \}

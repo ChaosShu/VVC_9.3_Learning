@@ -95,6 +95,7 @@ void EncModeCtrl::xExtractFeatures( const EncTestMode encTestmode, CodingStructu
   cs.features[ENC_FT_ENC_MODE_OPTS  ] = double( encTestmode.opts     );
 }
 
+/* unreasonable mode are pop_back() from testModes*/
 bool EncModeCtrl::nextMode( const CodingStructure &cs, Partitioner &partitioner )
 {
   m_ComprCUCtxList.back().lastTestMode = m_ComprCUCtxList.back().testModes.back();
