@@ -231,9 +231,11 @@ public:
 
   EncModeCtrl* getModeCtrl  () { return m_modeCtrl; }
 
-  /* Chaos */
+  /***** Chaos ******/
   bool ccGetSplitFlag(CodingStructure* &tempCS,Partitioner &partitioner, bool &mtSplitFlag, bool &qtSplitFlag, double &adjDepth) const;
-  void ccGetSplitType(const EncTestMode& encTestMode, int &ccSplitType);
+  void ccSetSplitType(const EncTestMode& encTestMode, int &ccSplitType);
+  void ccExtractFt(const CodingStructure*& bestCS, Partitioner& partitioner, char* &filename);
+  /******************/
 
   void   setMergeBestSATDCost(double cost) { m_mergeBestSATDCost = cost; }
   double getMergeBestSATDCost()            { return m_mergeBestSATDCost; }

@@ -2510,7 +2510,7 @@ class Slice
 private:
   //  Bitstream writing
   bool                       m_saoEnabledFlag[MAX_NUM_CHANNEL_TYPE];
-  int                        m_iPOC;
+  int                        m_iPOC;/*mayne this Chaos_ctx*/
   int                        m_iLastIDR;
   int                        m_prevGDRInSameLayerPOC;  //< the previous GDR in the same layer
   int                        m_iAssociatedIRAP;

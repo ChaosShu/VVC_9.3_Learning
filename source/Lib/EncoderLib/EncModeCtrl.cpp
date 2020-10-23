@@ -49,6 +49,7 @@
 
 #include <cmath>
 
+
 void EncModeCtrl::init( EncCfg *pCfg, RateCtrl *pRateCtrl, RdCost* pRdCost )
 {
   m_pcEncCfg      = pCfg;
@@ -100,11 +101,11 @@ bool EncModeCtrl::nextMode( const CodingStructure &cs, Partitioner &partitioner 
 {
   m_ComprCUCtxList.back().lastTestMode = m_ComprCUCtxList.back().testModes.back();
 
-  m_ComprCUCtxList.back().testModes.pop_back();
+  m_ComprCUCtxList.back().testModes.pop_back();//弹出当前测试模式
 
   while( !m_ComprCUCtxList.back().testModes.empty() && !tryModeMaster( currTestMode(), cs, partitioner ) )
   {
-    m_ComprCUCtxList.back().testModes.pop_back();
+    m_ComprCUCtxList.back().testModes.pop_back();//下一个要测试的模式不行了，则弹出
   }
 
   return !m_ComprCUCtxList.back().testModes.empty();
@@ -207,6 +208,68 @@ void EncModeCtrl::initLumaDeltaQpLUT()
       nextSparseIndex++;
     }
     m_lumaLevelToDeltaQPLUT[index] = lastDeltaQPValue;
+  }
+}
+
+/*Chaos*/
+void EncModeCtrl::cccontrolValidTestMode(uint8_t &flowFlag, EncTestMode testMode, Partitioner& partitioner, CodingStructure& tempCS, CodingStructure& bestCS)
+{
+  bool isModeValid = { true };
+  if (!partitioner.canSplit(getPartSplit(testMode), tempCS))//模式不满足VVC的划分约束xxxxxx跳到CU下一个划分,用 continue继续do
+  {
+    m_ComprCUCtxList.back().testModes.pop_back();
+    isModeValid = false;
+    flowFlag = 0;
+  }
+  if ((m_ComprCUCtxList.back().testModes.front().type == ETM_INTRA) && (m_ComprCUCtxList.back().testModes.size() == 1))//帧内被禁止的情况
+  {
+    if (!bestCS.cus.size()) {//除了帧内的其他模式都不可用(bestCS的cus仍然是默认的0)xxxxxx继续当前划分，do nothing
+      isModeValid = true;
+      flowFlag = 1;
+    }
+    else//已经有其他可用的模式被选为bestModexxxxxx结束CU划分
+    {
+      m_ComprCUCtxList.back().testModes.pop_back();
+      isModeValid = false;
+      flowFlag = 2;
+    }
+  }
+}
+
+void EncModeCtrl::resetTMCandidate(bool* testModeFlag, int qp) {
+  if (!testModeFlag[ETM_INTRA]) //帧内被禁了,那肯定时要放个模式进去的，而且说明还需要进一步划分，but why QT?
+  {
+    m_ComprCUCtxList.back().testModes.clear();
+    m_ComprCUCtxList.back().testModes.push_back({ ETM_INTRA, ETO_STANDARD, qp });//in case of erro desicion
+    m_ComprCUCtxList.back().testModes.push_back({ ETM_POST_DONT_SPLIT });//???
+    m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_QT, ETO_STANDARD, qp });
+  }
+  else
+  {
+    m_ComprCUCtxList.back().testModes.clear();
+    if (testModeFlag[ETM_SPLIT_QT])
+    {
+      m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_QT, ETO_STANDARD, qp });
+    }
+    if (testModeFlag[ETM_SPLIT_TT_V])
+    {
+      m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_TT_V, ETO_STANDARD, qp });
+    }
+    if (testModeFlag[ETM_SPLIT_TT_H])
+    {
+      m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_TT_H, ETO_STANDARD, qp });
+    }
+    if (testModeFlag[ETM_SPLIT_BT_V])
+    {
+      m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_BT_V, ETO_STANDARD, qp });
+    }
+    if (testModeFlag[ETM_SPLIT_BT_H])
+    {
+      m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_BT_H, ETO_STANDARD, qp });
+    }
+
+    m_ComprCUCtxList.back().testModes.push_back({ ETM_POST_DONT_SPLIT });
+    m_ComprCUCtxList.back().testModes.push_back({ ETM_INTRA, ETO_STANDARD, qp });
   }
 }
 
@@ -1157,9 +1220,9 @@ void EncModeCtrlMTnoRQT::initCULevel( Partitioner &partitioner, const CodingStru
   const CodingUnit* cuLeft  = cs.getCU( cs.area.blocks[partitioner.chType].pos().offset( -1, 0 ), partitioner.chType );
   const CodingUnit* cuAbove = cs.getCU( cs.area.blocks[partitioner.chType].pos().offset( 0, -1 ), partitioner.chType );
 
-  const bool qtBeforeBt = ( (  cuLeft  &&  cuAbove  && cuLeft ->qtDepth > partitioner.currQtDepth && cuAbove->qtDepth > partitioner.currQtDepth )
-                         || (  cuLeft  && !cuAbove  && cuLeft ->qtDepth > partitioner.currQtDepth )
-                         || ( !cuLeft  &&  cuAbove  && cuAbove->qtDepth > partitioner.currQtDepth )
+  const bool qtBeforeBt = ( (  cuLeft  &&  cuAbove  && cuLeft ->qtDepth > partitioner.currQTDepth && cuAbove->qtDepth > partitioner.currQTDepth )
+                         || (  cuLeft  && !cuAbove  && cuLeft ->qtDepth > partitioner.currQTDepth )
+                         || ( !cuLeft  &&  cuAbove  && cuAbove->qtDepth > partitioner.currQTDepth )
                          || ( !cuAbove && !cuLeft   && cs.area.lwidth() >= ( 32 << cs.slice->getDepth() ) ) )
                          && ( cs.area.lwidth() > ( cs.pcv->getMinQtSize( *cs.slice, partitioner.chType ) << 1 ) );
 
@@ -1474,12 +1537,12 @@ bool EncModeCtrlMTnoRQT::tryMode( const EncTestMode& encTestmode, const CodingSt
 
   CodedCUInfo    &relatedCU          = getBlkInfo( partitioner.currArea() );
 
-  if( cuECtx.minDepth > partitioner.currQtDepth && partitioner.canSplit( CU_QUAD_SPLIT, cs ) )
+  if( cuECtx.minDepth > partitioner.currQTDepth && partitioner.canSplit( CU_QUAD_SPLIT, cs ) )
   {
     // enforce QT
     return encTestmode.type == ETM_SPLIT_QT;
   }
-  else if( encTestmode.type == ETM_SPLIT_QT && cuECtx.maxDepth <= partitioner.currQtDepth )
+  else if( encTestmode.type == ETM_SPLIT_QT && cuECtx.maxDepth <= partitioner.currQTDepth )
   {
     // don't check this QT depth
     return false;
@@ -1820,7 +1883,7 @@ bool EncModeCtrlMTnoRQT::tryMode( const EncTestMode& encTestmode, const CodingSt
       case CU_TRIH_SPLIT:
         if( cuECtx.get<bool>( QT_BEFORE_BT ) && cuECtx.get<bool>( DID_QUAD_SPLIT ) )
         {
-          if( cuECtx.get<int>( MAX_QT_SUB_DEPTH ) > partitioner.currQtDepth + 1 )
+          if( cuECtx.get<int>( MAX_QT_SUB_DEPTH ) > partitioner.currQTDepth + 1 )
           {
             if( featureToSet >= 0 ) cuECtx.set( featureToSet, false );
             return false;
@@ -1831,7 +1894,7 @@ bool EncModeCtrlMTnoRQT::tryMode( const EncTestMode& encTestmode, const CodingSt
       case CU_TRIV_SPLIT:
         if( cuECtx.get<bool>( QT_BEFORE_BT ) && cuECtx.get<bool>( DID_QUAD_SPLIT ) )
         {
-          if( cuECtx.get<int>( MAX_QT_SUB_DEPTH ) > partitioner.currQtDepth + 1 )
+          if( cuECtx.get<int>( MAX_QT_SUB_DEPTH ) > partitioner.currQTDepth + 1 )
           {
             if( featureToSet >= 0 ) cuECtx.set( featureToSet, false );
             return false;
@@ -2012,7 +2075,7 @@ bool EncModeCtrlMTnoRQT::checkSkipOtherLfnst( const EncTestMode& encTestmode, Co
 }
 
 bool EncModeCtrlMTnoRQT::useModeResult( const EncTestMode& encTestmode, CodingStructure*& tempCS, Partitioner& partitioner )
-{
+{//当前tempCS采用了encTestmode的时候
   xExtractFeatures( encTestmode, *tempCS );//提取param1 和 param2 的一些参数更新到param2.
 
   ComprCUCtx& cuECtx = m_ComprCUCtxList.back();
@@ -2089,7 +2152,7 @@ bool EncModeCtrlMTnoRQT::useModeResult( const EncTestMode& encTestmode, CodingSt
       int cu1_h = tempCS->cus.front()->blocks[partitioner.chType].height;
       int cu2_h = tempCS->cus.back() ->blocks[partitioner.chType].height;
 
-      cuECtx.set( DO_TRIH_SPLIT, cu1_h < h_2 || cu2_h < h_2 || partitioner.currMtDepth + 1 == maxMtD );
+      cuECtx.set( DO_TRIH_SPLIT, cu1_h < h_2 || cu2_h < h_2 || partitioner.currMTDepth + 1 == maxMtD );
     }
   }
   else if( encTestmode.type == ETM_SPLIT_BT_V )
@@ -2100,13 +2163,14 @@ bool EncModeCtrlMTnoRQT::useModeResult( const EncTestMode& encTestmode, CodingSt
       int cu1_w = tempCS->cus.front()->blocks[partitioner.chType].width;
       int cu2_w = tempCS->cus.back() ->blocks[partitioner.chType].width;
 
-      cuECtx.set( DO_TRIV_SPLIT, cu1_w < w_2 || cu2_w < w_2 || partitioner.currMtDepth + 1 == maxMtD );
+      cuECtx.set( DO_TRIV_SPLIT, cu1_w < w_2 || cu2_w < w_2 || partitioner.currMTDepth + 1 == maxMtD );
     }
   }
 
   // for now just a simple decision based on RD-cost or choose tempCS if bestCS is not yet coded
   if( tempCS->features[ENC_FT_RD_COST] != MAX_DOUBLE && ( !cuECtx.bestCS || ( ( tempCS->features[ENC_FT_RD_COST] + ( tempCS->useDbCost ? tempCS->costDbOffset : 0 ) ) < ( cuECtx.bestCS->features[ENC_FT_RD_COST] + ( tempCS->useDbCost ? cuECtx.bestCS->costDbOffset : 0 ) ) ) ) )
-  {
+  {//这一行决定了tempCS是否可以成为bestCS
+
     cuECtx.bestCS = tempCS;
     cuECtx.bestCU = tempCS->cus[0];
     cuECtx.bestTU = cuECtx.bestCU->firstTU;

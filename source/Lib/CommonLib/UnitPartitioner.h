@@ -114,10 +114,10 @@ protected:
 
 public:
   unsigned currDepth;
-  unsigned currQtDepth;
+  unsigned currQTDepth;
   unsigned currTrDepth;
   unsigned currBtDepth;
-  unsigned currMtDepth;
+  unsigned currMTDepth;
   unsigned currSubdiv;
   Position currQgPos;
   Position currQgChromaPos;
@@ -190,10 +190,10 @@ public:
     m_partStack.push_back(PartLevel(TU_NO_ISP, { _initialState.currArea() }));
 
     currDepth    = _initialState.currDepth;
-    currQtDepth  = _initialState.currQtDepth;
+    currQTDepth  = _initialState.currQTDepth;
     currTrDepth  = _initialState.currTrDepth;
     currBtDepth  = _initialState.currBtDepth;
-    currMtDepth  = _initialState.currMtDepth;
+    currMTDepth  = _initialState.currMTDepth;
     chType       = _initialState.chType;
 #if _DEBUG
     m_currArea   = _initialState.currArea();

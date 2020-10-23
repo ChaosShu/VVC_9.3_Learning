@@ -1,6 +1,8 @@
 VTM Code Guide BOOK
 ==============================
+Tips
 *updata1：*生成了Partitioner的ClassDiagram.cd，可以产看Partitioner类的UML类图
+*argues: *ENABLE_TRACE :0→1
 
 前缀、后缀、缩写
 ------------
@@ -55,6 +57,7 @@ cs.useSubStructure(subCS, chType, subArea(_UnitArea), cpyPrea, cpyReco, cpyOrgRe
 栈，应该是存储每个CS对应的partitioner
 
 *partLevel*
+应该对应于一个partitioner中的一种encTestMode的东西
 
 
 每个UnitArea应该都对应有CS、Partitioner、PartLevel

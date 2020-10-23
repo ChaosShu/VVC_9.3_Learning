@@ -215,13 +215,88 @@ EncCu::~EncCu()
 {
 }
 
-/*    Algorithm of early Termination   */
+/*    Algorithm of early Termination ffffff  */
 bool EncCu::ccGetSplitFlag(CodingStructure*& tempCS, Partitioner& partitioner, bool& mtSplitFlag, bool& qtSplitFlag, double& adjDepth) const{
-  ;
-  return true;
+  Slice& slice = *tempCS->slice;
+
+  CodingUnit cu(tempCS->area);
+  cu.cs = tempCS;
+  cu.predMode = MODE_INTER;
+  cu.slice = tempCS->slice;
+
+  PredictionUnit pu(tempCS->area);
+  pu.cu = &cu;
+  pu.cs = tempCS;
+
+  uint8_t currDepth = partitioner.currDepth, currQTDepth = partitioner.currQTDepth, currMTDepth = partitioner.currMTDepth;
+  int cnt{ 0 }, sumAdjDepth{ 0 };
+
+  Position posLT = pu.Y().topLeft();
+  Position posRT = pu.Y().topRight();
+  Position posLB = pu.Y().bottomLeft();
+  CodingUnit* adjCU;
+
+  /*  check left PU  */
+  if (tempCS->getPURestricted(posLB.offset(-1, 0), pu, pu.chType))
+  {
+    adjCU = tempCS->getPURestricted(posLB.offset(-1, 0), pu, pu.chType)->cu;
+
+    mtSplitFlag |= adjCU->mtDepth > currMTDepth ? 1 : 0;//周围的MT划分比当前深，则mtSplitFlag++
+    qtSplitFlag |= adjCU->qtDepth > currQTDepth ? 1 : 0;//周围的QT划分比当前深，则mtSplitFlag++
+
+    cnt++;//周围可用的CU数++
+    sumAdjDepth += adjCU->depth;//周围深度和++
+  }
+  /*  check above PU  */
+  if (tempCS->getPURestricted(posRT.offset(0, -1), pu, pu.chType))
+  {
+    adjCU = tempCS->getPURestricted(posRT.offset(0, -1), pu, pu.chType)->cu;
+
+    mtSplitFlag |= adjCU->mtDepth > currMTDepth ? 1 : 0;
+    qtSplitFlag |= adjCU->qtDepth > currQTDepth ? 1 : 0;
+
+    cnt++;
+    sumAdjDepth += adjCU->depth;
+  }
+  /*  check left bottom PU  */
+  if (tempCS->getPURestricted(posLB.offset(-1, 1), pu, pu.chType))
+  {
+    adjCU = tempCS->getPURestricted(posLB.offset(-1, 1), pu, pu.chType)->cu;
+
+    mtSplitFlag |= adjCU->mtDepth > currMTDepth ? 1 : 0;
+    qtSplitFlag |= adjCU->qtDepth > currQTDepth ? 1 : 0;
+
+    cnt++;
+    sumAdjDepth += adjCU->depth;
+  }
+  /*  check left above PU  */
+  if (tempCS->getPURestricted(posLT.offset(-1, -1), pu, pu.chType))
+  {
+    adjCU = tempCS->getPURestricted(posLT.offset(-1, -1), pu, pu.chType)->cu;
+
+    mtSplitFlag |= adjCU->mtDepth > currMTDepth ? 1 : 0;
+    qtSplitFlag |= adjCU->qtDepth > currQTDepth ? 1 : 0;
+
+    cnt++;
+    sumAdjDepth += adjCU->depth;
+  }
+  /*  check right above PU  */
+  if (tempCS->getPURestricted(posRT.offset(1, -1), pu, pu.chType))
+  {
+    adjCU = tempCS->getPURestricted(posRT.offset(1, -1), pu, pu.chType)->cu;
+
+    mtSplitFlag |= adjCU->mtDepth > currMTDepth ? 1 : 0;
+    qtSplitFlag |= adjCU->qtDepth > currQTDepth ? 1 : 0;
+    
+    cnt++;
+    sumAdjDepth += adjCU->depth;
+  }
+
+  adjDepth = (cnt == 0) ? adjDepth : ((double)sumAdjDepth / cnt);
+  return cnt < 3 ? false : true;
 }
 
-void EncCu::ccGetSplitType(const EncTestMode &encTestMode, int &ccSplitType)
+void EncCu::ccSetSplitType(const EncTestMode &encTestMode, int &ccSplitType)
 {
   switch (encTestMode.type)
   {
@@ -236,21 +311,1876 @@ void EncCu::ccGetSplitType(const EncTestMode &encTestMode, int &ccSplitType)
   }
 }
 
+void EncCu::ccExtractFt(const CodingStructure*& bestCS, Partitioner& partitioner, char*& filename) {
+  int selectedSplit = bestCS->ccBestSplit;//result
+  auto x0 = bestCS->area.Y().x;
+  auto y0 = bestCS->area.Y().y;
+  auto width = bestCS->area.Y().width;
+  auto height = bestCS->area.Y().height;
+  int totalPixel = width * height;
+
+  const int currQTDepth = partitioner.currQTDepth;      //x1
+  const int currMTDepth = partitioner.currMTDepth;      //x2
+
+  const UnitArea currArea = clipArea(CS::getArea(*bestCS, bestCS->area, partitioner.chType), *bestCS->picture);
+  const CPelBuf picOri = bestCS->getOrgBuf(currArea).Y();
+
+}
+
+
 void EncCu::ccResetTestMode(CodingStructure *&tempCS, Partitioner &partitioner)
 {
   //首先需要一个vector存信息
   vector<EncTestMode> currTestModes = m_modeCtrl->getComprCUCtx().testModes;
-  const int currQTdepth = partitioner.currQtDepth;      //mark
-  const int currMTdepth = partitioner.currMtDepth;      //mark
+  const int currQTDepth = partitioner.currQTDepth;      //x2
+  const int currMTDepth = partitioner.currMTDepth;      //x3
+  int currQP = tempCS->currQP[CHANNEL_TYPE_LUMA];       //...
   const UnitArea currArea = clipArea(CS::getArea(*tempCS, tempCS->area, partitioner.chType), *tempCS->picture);
   PelBuf picOri = tempCS->getOrgBuf(currArea).Y();
   SizeType currW = currArea.lwidth();
   SizeType currH = currArea.lheight();
 
-  bool mtSplitFlag{ true }, qtSplitFlag{ true };
-  double adjDepth{ 0 };
+  if (currW < 16 || currW > 64)
+  {
+    return;
+  }
+
+  int totalPixel = currH * currW;
+  bool mtSplitFlag{ true }, qtSplitFlag{ true };      //x5, x6
+  double adjDepth{ 0 };                               //x7
   bool isSplitValid = ccGetSplitFlag(tempCS, partitioner, mtSplitFlag, qtSplitFlag, adjDepth);
 
+  if (!isSplitValid)
+  {
+    return;
+  }
+
+  bool testModeFlag[18] = { false };
+  for (auto cTM:currTestModes)
+  {
+    testModeFlag[cTM.type] = true; // Enable  11 test mode(2 mode are discarded)
+  }
+  int pixelSum{ 0 }, avgPixel{ 0 }, varPixelSum{ 0 }; //x8
+  for (int j = 0; j < currH; j++)
+  {
+    for (int i = 0; i < currW; i++)
+    {
+      pixelSum += picOri.at(i, j);
+    }
+  }
+  avgPixel = pixelSum / totalPixel;
+  for (int j = 0; j < currH; j++)
+  {
+    for (int i = 0; i < currW; i++)
+    {
+      varPixelSum += abs(picOri.at(i, j) - avgPixel);
+    }
+  }
+  int iMAD = varPixelSum / totalPixel;  //x13
+
+                                            /*  texture information   */
+  int VGsum{ 0 }, HGsum{ 0 }, Gsum{ 0 };  //x9,x10,x11
+  int maxG{ 0 };                          //x12
+
+  int ivG, ihG, iG;
+  for (int j = 0; j < currH - 1; j++)
+  {
+    for (int i = 0; i < currW - 1; i++)
+    {
+      ivG = abs((picOri.at(i - 1, j - 1) + 2 * picOri.at(i - 1, j) + picOri.at(i - 1, j + 1)) - 
+                (picOri.at(i + 1, j - 1) + picOri.at(i + 1, j) + picOri.at(i + 1, j + 1)));
+      ihG = abs((picOri.at(i - 1, j - 1) + 2 * picOri.at(i , j - 1) + picOri.at(i + 1, j - 1)) - 
+                (picOri.at(i - 1, j + 1) + picOri.at(i , j + 1) + picOri.at(i + 1, j + 1)));
+      iG = ivG + ihG;
+      VGsum += ivG;
+      HGsum += ihG;
+      Gsum += iG;
+
+      maxG = iG > maxG ? iG : maxG;
+    }
+  }
+
+  int avgG = Gsum / ((currH - 1) * (currW - 1));
+  double hvGradRatio = VGsum ? (double)HGsum / VGsum : MAX_DOUBLE;
+                                                                        /* decision tree*/
+
+  if (currQP == 22)
+  {
+    if (testModeFlag[ETM_SPLIT_QT] && currMTDepth == 0 && currQTDepth < 4)
+    {
+      if (1 == currQTDepth)
+      {
+        if (maxG < 43)
+        {
+          if (hvGradRatio < 0.75674)
+          {
+            if (hvGradRatio < 0.732969)
+            {
+              testModeFlag[ETM_SPLIT_QT] = false;
+            }
+            else
+            {
+              testModeFlag[ETM_SPLIT_QT] = true;
+            }
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_QT] = false;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_QT] = true;
+          testModeFlag[ETM_INTRA] = false;
+        }
+      }
+      else if (2 == currQTDepth)
+      {
+        if (qtSplitFlag < 2)
+        {
+          if (VGsum < 12137)
+          {
+            if (qtSplitFlag < 1)
+            {
+              testModeFlag[ETM_SPLIT_QT] = false;
+            }
+            else if (maxG < 93)
+            {
+              testModeFlag[ETM_SPLIT_QT] = false;
+            }
+            else
+            {
+              testModeFlag[ETM_SPLIT_QT] = true;
+            }
+          }
+          else if (HGsum < 14587)
+          {
+            if (HGsum < 10545)
+            {
+              testModeFlag[ETM_SPLIT_QT] = false;
+            }
+            else
+            {
+              testModeFlag[ETM_SPLIT_QT] = true;
+            }
+          }
+          else if (maxG < 410)
+          {
+            testModeFlag[ETM_SPLIT_QT] = true;
+          }
+          else if (Gsum < 90117)
+          {
+            testModeFlag[ETM_SPLIT_QT] = true;
+            testModeFlag[ETM_INTRA] = false;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_QT] = true;
+          }
+        }
+        else if (maxG < 109)
+        {
+          testModeFlag[ETM_SPLIT_QT] = true;
+        }
+        else if (qtSplitFlag < 3)
+        {
+          if (mtSplitFlag < 3)                         // may be wrong
+          {
+            testModeFlag[ETM_SPLIT_QT] = true;
+            testModeFlag[ETM_INTRA] = false;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_QT] = true;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_QT] = true;
+          testModeFlag[ETM_INTRA] = false;
+        }
+      }
+      else if (3 == currQTDepth)
+      {
+        if (qtSplitFlag < 1)
+        {
+          if (VGsum < 2362)
+          {
+            testModeFlag[ETM_SPLIT_QT] = false;
+          }
+          else if (hvGradRatio < 0.307143)
+          {
+            testModeFlag[ETM_SPLIT_QT] = false;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_QT] = true;
+          }
+        }
+        else if (maxG < 583)
+        {
+          testModeFlag[ETM_SPLIT_QT] = true;
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_QT] = true;
+          testModeFlag[ETM_INTRA] = false;
+        }
+      }
+    }
+    else
+    {
+      testModeFlag[ETM_SPLIT_QT] = false;
+    }
+
+    // BTH mode type
+    if (testModeFlag[ETM_SPLIT_BT_H] && testModeFlag[ETM_INTRA])
+    {
+      if (currW == currH)
+      {
+        if (hvGradRatio < 1.6547)
+        {
+          if (HGsum < 365)
+          {
+            if (adjDepth < 4.775)
+            {
+              testModeFlag[ETM_SPLIT_BT_H] = false;
+            }
+            else if (hvGradRatio < 0.632721)
+            {
+              testModeFlag[ETM_SPLIT_BT_H] = false;
+            }
+            else
+            {
+              testModeFlag[ETM_SPLIT_BT_H] = true;
+            }
+          }
+          else if (hvGradRatio < 0.862098)
+          {
+            if (currW < 12)
+            {
+              testModeFlag[ETM_SPLIT_BT_H] = true;
+            }
+            else
+            {
+              testModeFlag[ETM_SPLIT_BT_H] = false;
+            }
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = true;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_BT_H] = true;
+        }
+      }
+      else if (currW > currH)
+      {
+        if (hvGradRatio < 1.4804)
+        {
+          if (hvGradRatio < 1.00628)
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = false;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = true;
+          }
+        }
+        else if (maxG < 37)
+        {
+          testModeFlag[ETM_SPLIT_BT_H] = false;
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_BT_H] = true;
+        }
+      }
+      else
+      {
+        if (maxG < 71)
+        {
+          if (maxG < 37)
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = false;
+          }
+          else if (mtSplitFlag < 1)
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = false;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = true;
+          }
+        }
+        else if (mtSplitFlag < 1)
+        {
+          if (hvGradRatio < 0.535889)
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = false;  // prob = 80%
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = true;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_BT_H] = true;
+        }
+      }
+    }
+
+    // BTV mode type
+    if (testModeFlag[ETM_SPLIT_BT_V] && testModeFlag[ETM_INTRA])
+    {
+      if (currW == currH)
+      {
+        if (hvGradRatio < 0.641722)
+        {
+          testModeFlag[ETM_SPLIT_BT_V] = true;
+        }
+        else if (adjDepth < 5.1)
+        {
+          if (hvGradRatio < 1.3397)
+          {
+            if (maxG < 55)
+            {
+              testModeFlag[ETM_SPLIT_BT_V] = false;
+            }
+            else
+            {
+              testModeFlag[ETM_SPLIT_BT_V] = true;
+            }
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_BT_V] = false;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_BT_V] = true;
+        }
+      }
+      else if (currW > currH)
+      {
+        if (maxG < 77)
+        {
+          if (mtSplitFlag < 0.5)
+          {
+            testModeFlag[ETM_SPLIT_BT_V] = false;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_BT_V] = true;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_BT_V] = true;
+        }
+      }
+      else
+      {
+        if (hvGradRatio < 0.641554)
+        {
+          testModeFlag[ETM_SPLIT_BT_V] = true;
+        }
+        else if (hvGradRatio < 1.0735)
+        {
+          testModeFlag[ETM_SPLIT_BT_V] = true;
+        }
+        else if (adjDepth < 5.1)
+        {
+          testModeFlag[ETM_SPLIT_BT_V] = false;
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_BT_V] = true;
+        }
+      }
+    }
+
+    // TTH mode type
+    if (testModeFlag[ETM_SPLIT_TT_H] && testModeFlag[ETM_INTRA])
+    {
+      if (currW == currH)
+      {
+        if (hvGradRatio < 1.3731)
+        {
+          if (hvGradRatio < 0.898022)
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = false;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = true;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_TT_H] = true;     // exit doube; can achieve more samples termination
+        }
+      }
+      else if (currW > currH)
+      {
+        if (HGsum < 3196)
+        {
+          if (hvGradRatio < 1.0732)
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = false;
+          }
+          else if (maxG < 99)
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = false;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = true;
+          }
+        }
+        else if (hvGradRatio < 1.77234)
+        {
+          if (hvGradRatio < 0.772197)
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = false;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = true;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_TT_H] = true;
+        }
+      }
+      else
+      {
+        if (maxG < 125)
+        {
+          if (maxG < 63)
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = false;
+          }
+          else if (hvGradRatio < 0.627846)
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = false;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = true;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_TT_H] = true;
+        }
+      }
+    }
+
+    // TTV mode type
+    if (testModeFlag[ETM_SPLIT_TT_V] && testModeFlag[ETM_INTRA])
+    {
+      if (currW == currH)
+      {
+        if (hvGradRatio < 0.839139)
+        {
+          testModeFlag[ETM_SPLIT_TT_V] = true;
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_TT_V] = false;
+        }
+      }
+      else if (currW > currH)
+      {
+        if (maxG < 99)
+        {
+          if (maxG < 63)
+          {
+            testModeFlag[ETM_SPLIT_TT_V] = false;
+          }
+          else if (hvGradRatio < 1.73773)
+          {
+            testModeFlag[ETM_SPLIT_TT_V] = true;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_TT_V] = false;
+          }
+        }
+        else if (hvGradRatio < 2.15341)
+        {
+          testModeFlag[ETM_SPLIT_TT_V] = true;
+        }
+        else if (qtSplitFlag < 2)
+        {
+          testModeFlag[ETM_SPLIT_TT_V] = false;
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_TT_V] = true;
+        }
+      }
+      else
+      {
+        if (hvGradRatio < 0.64964)
+        {
+          if (maxG < 209)
+          {
+            testModeFlag[ETM_SPLIT_TT_V] = true;
+          }
+          else if (Gsum < 1307)
+          {
+            testModeFlag[ETM_SPLIT_TT_V] = true;
+            // testModeFlag[ETM_INTRA] = false;              // here can be add after depend on performance
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_TT_V] = true;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_TT_V] = false;
+        }
+      }
+    }
+  }
+  else if (27 == currQP)
+  {
+    if (testModeFlag[ETM_SPLIT_QT] && currMTDepth == 0 && currQTDepth < 4)
+    {
+      if (1 == currQTDepth)
+      {
+        if (maxG < 105)
+        {
+          if (adjDepth < 3.16667)
+          {
+            if (HGsum < 52595)
+            {
+              if (maxG < 73)
+              {
+                testModeFlag[ETM_SPLIT_QT] = false;
+              }
+              else if (Gsum < 60386)
+              {
+                testModeFlag[ETM_SPLIT_QT] = true;
+              }
+              else
+              {
+                testModeFlag[ETM_SPLIT_QT] = false;
+              }
+            }
+            else
+            {
+              testModeFlag[ETM_SPLIT_QT] = true;
+              testModeFlag[ETM_INTRA] = false;
+            }
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_QT] = true;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_QT] = true;
+          testModeFlag[ETM_INTRA] = false;
+        }
+      }
+      else if (2 == currQTDepth)
+      {
+        if (qtSplitFlag < 1)
+        {
+          if (VGsum < 9678)
+          {
+            if (hvGradRatio < 12.9694)
+            {
+              testModeFlag[ETM_SPLIT_QT] = false;
+            }
+            else
+            {
+              testModeFlag[ETM_SPLIT_QT] = true;
+              testModeFlag[ETM_INTRA] = false;
+            }
+          }
+          else if (maxG < 3.9)
+          {
+            testModeFlag[ETM_SPLIT_QT] = false;   //  85% prob, can be revised for furtuer time reduction
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_QT] = true;
+          }
+        }
+        else if (maxG < 143)
+        {
+          if (qtSplitFlag < 4)
+          {
+            if (VGsum < 10346)
+            {
+              testModeFlag[ETM_SPLIT_QT] = false;      // 88% prob, can be revised for furtuer time reduction
+            }
+            else
+            {
+              testModeFlag[ETM_SPLIT_QT] = true;
+            }
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_QT] = true;
+          }
+        }
+        else if (qtSplitFlag < 3)
+        {
+          if (VGsum < 12954)
+          {
+            testModeFlag[ETM_SPLIT_QT] = true;
+          }
+          else if (hvGradRatio < 0.253678)
+          {
+            testModeFlag[ETM_SPLIT_QT] = true;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_QT] = true;
+            testModeFlag[ETM_INTRA] = false;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_QT] = true;
+          testModeFlag[ETM_INTRA] = false;
+        }
+      }
+      else if (3 == currQTDepth)
+      {
+        if (qtSplitFlag < 1)
+        {
+          if (VGsum < 1914)
+          {
+            testModeFlag[ETM_SPLIT_QT] = false;
+          }
+          else if (hvGradRatio < 0.706929)
+          {
+            if (hvGradRatio < 0.277791)
+            {
+              testModeFlag[ETM_SPLIT_QT] = false;
+            }
+            else
+            {
+              testModeFlag[ETM_SPLIT_QT] = true;
+            }
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_QT] = true;
+          }
+        }
+        else if (maxG < 749)
+        {
+          testModeFlag[ETM_SPLIT_QT] = true;
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_QT] = true;
+          testModeFlag[ETM_INTRA] = false;
+        }
+      }
+    }
+    else
+    {
+      testModeFlag[ETM_SPLIT_QT] = false;
+    }
+
+
+    // BTH mode type
+    if (testModeFlag[ETM_SPLIT_BT_H] && testModeFlag[ETM_INTRA])
+    {
+      if (currW == currH)
+      {
+        if (hvGradRatio < 1.4332)
+        {
+          if (maxG < 125)
+          {
+            if (hvGradRatio < 1.03465)
+            {
+              testModeFlag[ETM_SPLIT_BT_H] = false;
+            }
+            else if (maxG < 63)
+            {
+              testModeFlag[ETM_SPLIT_BT_H] = false;
+            }
+            else
+            {
+              testModeFlag[ETM_SPLIT_BT_H] = true;
+            }
+          }
+          else if (hvGradRatio < 0.624282)
+          {
+            if (hvGradRatio < 0.385821)
+            {
+              testModeFlag[ETM_SPLIT_BT_H] = false;
+            }
+            else
+            {
+              testModeFlag[ETM_SPLIT_BT_H] = true; // can be revised for more time saving , prob 80%
+            }
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = true;
+          }
+        }
+        else if (maxG < 121)
+        {
+          if (maxG < 51)
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = false;   // prob 82% can be revised for good rd performance
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = true;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_BT_H] = true;
+        }
+      }
+      else if (currW > currH)
+      {
+        if (hvGradRatio < 2.01664)
+        {
+          if (partitioner.currBtDepth < 1)
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = true;
+          }
+          else if (HGsum < 3342)
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = false;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = true;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_BT_H] = true;
+        }
+      }
+      else
+      {
+        if (maxG < 127)
+        {
+          if (mtSplitFlag < 1)
+          {
+            if (maxG < 71)
+            {
+              testModeFlag[ETM_SPLIT_BT_H] = false;
+            }
+            else if (hvGradRatio < 0.510069)
+            {
+              testModeFlag[ETM_SPLIT_BT_H] = false; // prob 86%
+            }
+            else
+            {
+              testModeFlag[ETM_SPLIT_BT_H] = true;
+            }
+          }
+          else if (maxG < 63)
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = false;  // can be revised for more time reduction; prob of 80%
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = true;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_BT_H] = true;
+        }
+      }
+    }
+
+    // BTV mode type
+    if (testModeFlag[ETM_SPLIT_BT_V] && testModeFlag[ETM_INTRA])
+    {
+      if (currW == currH)
+      {
+        if (hvGradRatio < 0.729748)
+        {
+          testModeFlag[ETM_SPLIT_BT_V] = true;
+        }
+        else if (adjDepth < 5.1)
+        {
+          testModeFlag[ETM_SPLIT_BT_V] = false;
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_BT_V] = true;
+        }
+      }
+      else if (currW > currH)
+      {
+        if (maxG < 111)
+        {
+          if (hvGradRatio < 1.35804)
+          {
+            if (maxG < 69)
+            {
+              testModeFlag[ETM_SPLIT_BT_V] = false;   //prob = 85;  revised for better performance
+            }
+            else
+            {
+              testModeFlag[ETM_SPLIT_BT_V] = true;
+            }
+          }
+          else if (adjDepth < 4.45)
+          {
+            testModeFlag[ETM_SPLIT_BT_V] = false;
+          }
+          else if (maxG < 71)
+          {
+            testModeFlag[ETM_SPLIT_BT_V] = false;  // prob =87
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_BT_V] = true;
+          }
+        }
+        else if (hvGradRatio < 2.81482)
+        {
+          testModeFlag[ETM_SPLIT_BT_V] = true;
+        }
+        else if (adjDepth < 5.225)
+        {
+          if (hvGradRatio < 6.71753)
+          {
+            testModeFlag[ETM_SPLIT_BT_V] = true;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_BT_V] = false;   //prob = 88%, revised for better performance
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_BT_V] = true;
+        }
+      }
+      else
+      {
+        if (hvGradRatio < 0.651033)
+        {
+          testModeFlag[ETM_SPLIT_BT_V] = true;     // can be revised for further time reduction
+        }
+        else if (hvGradRatio < 1.15674)
+        {
+          if (maxG < 69)
+          {
+            if (VGsum < 2948)
+            {
+              testModeFlag[ETM_SPLIT_BT_V] = false;
+            }
+            else
+            {
+              testModeFlag[ETM_SPLIT_BT_V] = true;
+            }
+          }
+          else if (partitioner.currBtDepth < 2)
+          {
+            testModeFlag[ETM_SPLIT_BT_V] = true;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_BT_V] = false;
+          }
+        }
+        else if (adjDepth < 5.1)
+        {
+          testModeFlag[ETM_SPLIT_BT_V] = false;
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_BT_V] = true;
+        }
+      }
+    }
+
+    // TTH mode type
+    if (testModeFlag[ETM_SPLIT_TT_H] && testModeFlag[ETM_INTRA])
+    {
+      if (currW == currH)
+      {
+        if (hvGradRatio < 1.81898)
+        {
+          if (maxG < 125)
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = false;   // revised for better performance
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = true;
+          }
+        }
+        else if (maxG < 97)
+        {
+          if (adjDepth < 4.36667)
+          {
+            if (maxG < 53)
+            {
+              testModeFlag[ETM_SPLIT_TT_H] = false;     // prob 89, revised for performance
+            }
+            else
+            {
+              testModeFlag[ETM_SPLIT_TT_H] = true;
+            }
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = true;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_TT_H] = true;
+        }
+      }
+      else if (currW > currH)
+      {
+        if (HGsum < 5344)
+        {
+          if (HGsum < 3570)
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = false;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = true;   // revised for more time reduction : 87%
+          }
+        }
+        else if (hvGradRatio < 1.27129)
+        {
+          if (HGsum < 23561)
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = false;    // revised for better performance: prob 90%
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = true;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_TT_H] = true;
+        }
+      }
+      else
+      {
+        if (maxG < 171)
+        {
+          if (maxG < 81)
+          {
+            if (mtSplitFlag < 1)
+            {
+              testModeFlag[ETM_SPLIT_TT_H] = false;
+            }
+            else if (currH < 24)
+            {
+              testModeFlag[ETM_SPLIT_TT_H] = false;
+            }
+            else
+            {
+              testModeFlag[ETM_SPLIT_TT_H] = true;  //more time reduction  
+            }
+          }
+          else if (hvGradRatio < 0.653465)
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = false;   // prob:90 for better performance
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = true;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_TT_H] = true;
+        }
+      }
+    }
+
+    // TTV mode type
+    if (testModeFlag[ETM_SPLIT_TT_V] && testModeFlag[ETM_INTRA])
+    {
+      if (currW == currH)
+      {
+        if (hvGradRatio < 0.721521)
+        {
+          testModeFlag[ETM_SPLIT_TT_V] = true;
+        }
+        else if (VGsum < 2154)
+        {
+          testModeFlag[ETM_SPLIT_TT_V] = false;
+        }
+        else if (hvGradRatio < 1.40263)
+        {
+          testModeFlag[ETM_SPLIT_TT_V] = true;
+        }
+        else if (hvGradRatio < 1.82475)
+        {
+          testModeFlag[ETM_SPLIT_TT_V] = true;
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_TT_V] = false;
+        }
+      }
+      else if (currW > currH)
+      {
+        if (maxG < 137)
+        {
+          if (maxG < 77)
+          {
+            if (hvGradRatio < 1.0884 && adjDepth >= 4.1)
+            {
+              testModeFlag[ETM_SPLIT_TT_V] = true;
+            }
+            else
+            {
+              testModeFlag[ETM_SPLIT_TT_V] = false;
+            }
+          }
+          else if (hvGradRatio < 1.75993)
+          {
+            testModeFlag[ETM_SPLIT_TT_V] = true;
+          }
+          else if (Gsum < 607)
+          {
+            testModeFlag[ETM_SPLIT_TT_V] = true;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_TT_V] = false;
+          }
+        }
+        else if (hvGradRatio < 2.52869)
+        {
+          testModeFlag[ETM_SPLIT_TT_V] = true;
+        }
+        else if (qtSplitFlag < 2)
+        {
+          testModeFlag[ETM_SPLIT_TT_V] = false;   //revised for better performance: prob 11
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_TT_V] = true;
+        }
+      }
+      else
+      {
+        if (maxG < 255)
+        {
+          if (hvGradRatio < 0.725047)
+          {
+            testModeFlag[ETM_SPLIT_TT_V] = true;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_TT_V] = false;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_TT_V] = true;
+        }
+      }
+    }
+  }
+  else if (32 == currQP)
+  {
+
+    if (testModeFlag[ETM_SPLIT_QT] && currMTDepth == 0 && currQTDepth < 4)
+    {
+      if (1 == currQTDepth)
+      {
+        return;
+        if (maxG < 143)
+        {
+          if (maxG < 93)
+          {
+            testModeFlag[ETM_SPLIT_QT] = false;
+          }
+          else if (adjDepth < 2.41667)
+          {
+            testModeFlag[ETM_SPLIT_QT] = false;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_QT] = true;
+          }
+        }
+        else if (VGsum < 16417)
+        {
+          testModeFlag[ETM_SPLIT_QT] = false;
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_QT] = true;
+          testModeFlag[ETM_INTRA] = false;
+        }
+      }
+      else if (2 == currQTDepth)
+      {
+        if (maxG < 301)
+        {
+          if (qtSplitFlag < 2)
+          {
+            testModeFlag[ETM_SPLIT_QT] = false;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_QT] = true;
+          }
+        }
+        else if (qtSplitFlag < 2)
+        {
+          if (hvGradRatio < 4.23107)
+          {
+            testModeFlag[ETM_SPLIT_QT] = true;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_QT] = false;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_QT] = true;
+          testModeFlag[ETM_INTRA] = false;
+        }
+      }
+      else if (3 == currQTDepth)
+      {
+        if (qtSplitFlag < 1)
+        {
+          if (maxG < 309)
+          {
+            testModeFlag[ETM_SPLIT_QT] = false;    // revised for good performance
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_QT] = true;
+          }
+        }
+        else if (maxG < 1129)
+        {
+          testModeFlag[ETM_SPLIT_QT] = true;
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_QT] = true;
+          testModeFlag[ETM_INTRA] = false;
+        }
+      }
+    }
+    else
+    {
+      testModeFlag[ETM_SPLIT_QT] = false;
+    }
+
+
+    // BTH mode type
+    if (testModeFlag[ETM_SPLIT_BT_H] && testModeFlag[ETM_INTRA])
+    {
+      if (currW == currH)
+      {
+        if (hvGradRatio < 1.39559)
+        {
+          if (maxG < 187)
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = false;
+          }
+          else if (hvGradRatio < 0.742789)
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = false;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = true;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_BT_H] = true;
+        }
+      }
+      else if (currW > currH)
+      {
+        if (hvGradRatio < 2.03051)
+        {
+          if (partitioner.currBtDepth < 1)
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = true;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = false;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_BT_H] = true;
+        }
+      }
+      else
+      {
+        if (hvGradRatio < 2.03051)
+        {
+          if (partitioner.currBtDepth < 1)
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = true;
+          }
+          else if (hvGradRatio < 1.33785)
+          {
+            if (maxG < 245)
+            {
+              testModeFlag[ETM_SPLIT_BT_H] = false;
+            }
+            else if (hvGradRatio < 0.637552)
+            {
+              testModeFlag[ETM_SPLIT_BT_H] = false;
+            }
+            else
+            {
+              testModeFlag[ETM_SPLIT_BT_H] = true;
+            }
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = true;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_BT_H] = true;
+        }
+      }
+    }
+
+    // BTV mode type
+    if (testModeFlag[ETM_SPLIT_BT_V] && testModeFlag[ETM_INTRA])
+    {
+      if (currW == currH)
+      {
+        if (maxG < 0.787591)
+        {
+          testModeFlag[ETM_SPLIT_BT_V] = true;
+        }
+        else if (hvGradRatio < 1.63022)
+        {
+          if (maxG < 133)
+          {
+            if (adjDepth < 4.1)
+            {
+              testModeFlag[ETM_SPLIT_BT_V] = false;
+            }
+            else
+            {
+              testModeFlag[ETM_SPLIT_BT_V] = true;
+            }
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_BT_V] = true;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_BT_V] = false;
+        }
+      }
+      else if (currW > currH)
+      {
+        if (maxG < 129)
+        {
+          if (iMAD < 5)
+          {
+            testModeFlag[ETM_SPLIT_BT_V] = false;
+          }
+          else if (hvGradRatio < 1.88934)
+          {
+            testModeFlag[ETM_SPLIT_BT_V] = true;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_BT_V] = false;
+          }
+        }
+        else if (hvGradRatio < 2.36564)
+        {
+          testModeFlag[ETM_SPLIT_BT_V] = true;
+        }
+        else if (maxG < 259)
+        {
+          testModeFlag[ETM_SPLIT_BT_V] = false;   // revised for better performance: prob: 84
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_BT_V] = true;
+        }
+      }
+      else
+      {
+        if (hvGradRatio > 1.09883)
+        {
+          testModeFlag[ETM_SPLIT_BT_V] = false;
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_BT_V] = true;
+        }
+      }
+    }
+
+    // TTH mode type
+    if (testModeFlag[ETM_SPLIT_TT_H] && testModeFlag[ETM_INTRA])
+    {
+      if (currW == currH)
+      {
+        if (hvGradRatio < 1.48259)
+        {
+          if (maxG < 237)
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = false;
+          }
+          else if (hvGradRatio < 0.677664)
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = false;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = true;
+          }
+        }
+        else if (maxG < 149)
+        {
+          if (maxG < 91)
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = false;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = true;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_TT_H] = true;
+        }
+      }
+      else if (currW > currH)
+      {
+        if (HGsum < 12445)
+        {
+          testModeFlag[ETM_SPLIT_TT_H] = false;
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_TT_H] = true;
+        }
+      }
+      else
+      {
+        if (maxG < 227)
+        {
+          if (maxG < 133)
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = false;
+          }
+          else if (currH < 24)
+          {
+            if (VGsum < 727)
+            {
+              testModeFlag[ETM_SPLIT_TT_H] = true;
+            }
+            else
+            {
+              testModeFlag[ETM_SPLIT_TT_H] = false;  // prob: 14
+            }
+          }
+          else if (hvGradRatio < 0.536052)
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = false;  // prob:12
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = true;
+          }
+        }
+        else if (currH < 24)
+        {
+          if (hvGradRatio < 0.609216)
+          {
+            if (maxG < 359)
+            {
+              testModeFlag[ETM_SPLIT_TT_H] = false;  // revised for better performance, prob: 86
+            }
+            else
+            {
+              testModeFlag[ETM_SPLIT_TT_H] = true;
+            }
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = true;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_TT_H] = true;
+        }
+      }
+    }
+
+    // TTV mode type
+    if (testModeFlag[ETM_SPLIT_TT_V] && testModeFlag[ETM_INTRA])
+    {
+      if (currW == currH)
+      {
+        if (hvGradRatio >= 1.04479)
+        {
+          testModeFlag[ETM_SPLIT_TT_V] = false;
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_TT_V] = true;
+        }
+      }
+      else if (currW > currH)
+      {
+        if (maxG < 207)
+        {
+          if (maxG < 119)
+          {
+            testModeFlag[ETM_SPLIT_TT_V] = false;
+          }
+          else if (hvGradRatio < 1.34984)
+          {
+            testModeFlag[ETM_SPLIT_TT_V] = true;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_TT_V] = false;  // prob: 90
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_TT_V] = true;
+        }
+      }
+      else
+      {
+        if (maxG < 247)
+        {
+          testModeFlag[ETM_SPLIT_TT_V] = false;
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_TT_V] = true;
+        }
+      }
+    }
+  }
+  else if (37 == currQP)
+  {
+    if (testModeFlag[ETM_SPLIT_QT] && currMTDepth == 0 && currQTDepth < 4)
+    {
+      if (1 == currQTDepth)
+      {
+        if (maxG < 163)
+        {
+          testModeFlag[ETM_SPLIT_QT] = true;
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_QT] = true;
+          testModeFlag[ETM_INTRA] = false;
+        }
+      }
+      else if (2 == currQTDepth)
+      {
+        if (maxG < 387)
+        {
+          if (qtSplitFlag < 1)
+          {
+            testModeFlag[ETM_SPLIT_QT] = false;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_QT] = true;
+          }
+        }
+        else if (qtSplitFlag < 1)
+        {
+          if (hvGradRatio < 2.94503)
+          {
+            testModeFlag[ETM_SPLIT_QT] = true;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_QT] = false;     //revised for better performance
+          }
+        }
+        else if (maxG < 521)
+        {
+          testModeFlag[ETM_SPLIT_QT] = true;
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_QT] = true;
+          testModeFlag[ETM_INTRA] = false;   //revised for better performance
+        }
+      }
+      else if (3 == currQTDepth)           // can be revised
+      {
+        if (qtSplitFlag < 1)
+        {
+          if (maxG < 233)
+          {
+            testModeFlag[ETM_SPLIT_QT] = false;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_QT] = true;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_QT] = true;
+        }
+      }
+    }
+    else
+    {
+      testModeFlag[ETM_SPLIT_QT] = false;
+    }
+
+    // BTH mode type
+    if (testModeFlag[ETM_SPLIT_BT_H] && testModeFlag[ETM_INTRA])
+    {
+      if (currW == currH)
+      {
+        if (hvGradRatio < 1.26942)
+        {
+          if (maxG < 301)
+          {
+            if (hvGradRatio < 0.82513)
+            {
+              testModeFlag[ETM_SPLIT_BT_H] = false;
+            }
+            else if (maxG < 211)
+            {
+              testModeFlag[ETM_SPLIT_BT_H] = false;
+            }
+            else
+            {
+              testModeFlag[ETM_SPLIT_BT_H] = true;
+            }
+          }
+          else if (hvGradRatio < 0.576283)
+          {
+            if (hvGradRatio < 0.302749)
+            {
+              testModeFlag[ETM_SPLIT_BT_H] = false;
+            }
+            else
+            {
+              testModeFlag[ETM_SPLIT_BT_H] = true;
+            }
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = true;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_BT_H] = true;
+        }
+      }
+      else if (currW > currH)
+      {
+        if (hvGradRatio < 1.85033)
+        {
+          if (partitioner.currBtDepth < 1)
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = true;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = false;   //prob: 90
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_BT_H] = true;
+        }
+      }
+      else
+      {
+        if (maxG < 249)
+        {
+          if (maxG < 161)
+          {
+            if (iMAD < 8)
+            {
+              testModeFlag[ETM_SPLIT_BT_H] = false;
+            }
+            else if (hvGradRatio < 0.654942)
+            {
+              testModeFlag[ETM_SPLIT_BT_H] = false;
+            }
+            else
+            {
+              testModeFlag[ETM_SPLIT_BT_H] = true;
+            }
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = true;
+          }
+        }
+        else if (hvGradRatio < 0.289092)
+        {
+          if (hvGradRatio < 0.125621)
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = false;   //revised
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_BT_H] = true;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_BT_H] = true;
+        }
+      }
+    }
+
+    // BTV mode type
+    if (testModeFlag[ETM_SPLIT_BT_V] && testModeFlag[ETM_INTRA])
+    {
+      if (currW == currH)
+      {
+        if (hvGradRatio < 0.759465)
+        {
+          testModeFlag[ETM_SPLIT_BT_V] = true;
+        }
+        else if (hvGradRatio < 1.70523)
+        {
+          if (maxG < 257)
+          {
+            testModeFlag[ETM_SPLIT_BT_V] = false;   // prob:85  can be revised for RD
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_BT_V] = true;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_BT_V] = false;
+        }
+      }
+      else if (currW > currH)
+      {
+        if (maxG < 247)
+        {
+          if (iMAD < 8)
+          {
+            if (maxG < 151)
+            {
+              testModeFlag[ETM_SPLIT_BT_V] = false; // loss:14
+            }
+            else
+            {
+              testModeFlag[ETM_SPLIT_BT_V] = true;
+            }
+          }
+          else if (hvGradRatio < 1.57028)
+          {
+            testModeFlag[ETM_SPLIT_BT_V] = true;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_BT_V] = false;   // loss: 16
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_BT_V] = true;
+        }
+      }
+      else
+      {
+        if (hvGradRatio < 0.688611)
+        {
+          testModeFlag[ETM_SPLIT_BT_V] = true;
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_BT_V] = false;
+        }
+      }
+    }
+
+    // TTH mode type
+    if (testModeFlag[ETM_SPLIT_TT_H] && testModeFlag[ETM_INTRA])
+    {
+      if (currW == currH)
+      {
+        if (hvGradRatio < 1.44977)
+        {
+          if (maxG < 307)
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = false;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = true;   //revised for Time reduction
+          }
+        }
+        else if (maxG < 267)
+        {
+          if (maxG < 149)
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = false;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = true;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_TT_H] = true;
+        }
+      }
+      else if (currW > currH)
+      {
+        if (HGsum < 18478)
+        {
+          testModeFlag[ETM_SPLIT_TT_H] = false;
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_TT_H] = true;
+        }
+      }
+      else
+      {
+        if (maxG < 313)
+        {
+          if (maxG < 197)
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = false;
+          }
+          else if (currH < 24)
+          {
+            if (VGsum < 2347)
+            {
+              testModeFlag[ETM_SPLIT_TT_H] = true;
+            }
+            else
+            {
+              testModeFlag[ETM_SPLIT_TT_H] = false;
+            }
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_TT_H] = true;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_TT_H] = true;
+        }
+      }
+    }
+
+    // TTV mode type
+    if (testModeFlag[ETM_SPLIT_TT_V] && testModeFlag[ETM_INTRA])
+    {
+      if (currW == currH)
+      {
+        if (hvGradRatio < 0.744778)
+        {
+          testModeFlag[ETM_SPLIT_TT_V] = true;
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_TT_V] = false;
+        }
+      }
+      else if (currW > currH)
+      {
+        if (maxG < 361)
+        {
+          if (maxG < 205)
+          {
+            testModeFlag[ETM_SPLIT_TT_V] = false;   //prob:10
+          }
+          else if (hvGradRatio < 1.40694)
+          {
+            testModeFlag[ETM_SPLIT_TT_V] = true;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_TT_V] = false;  //prob:12
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_TT_V] = true;
+        }
+      }
+      else
+      {
+        if (hvGradRatio < 0.766706)
+        {
+          if (maxG < 149)
+          {
+            testModeFlag[ETM_SPLIT_TT_V] = false;
+          }
+          else
+          {
+            testModeFlag[ETM_SPLIT_TT_V] = true;
+          }
+        }
+        else
+        {
+          testModeFlag[ETM_SPLIT_TT_V] = false;
+        }
+      }
+    }
+  }
+  else
+  {
+    return;
+  }
+  //*/
+
+  m_modeCtrl->resetTMCandidate(testModeFlag, currQP);
 }
 
 /** \param    pcEncLib      pointer of encoder class
@@ -546,9 +2476,9 @@ bool EncCu::xCheckBestMode( CodingStructure *&tempCS, CodingStructure *&bestCS, 
     DTRACE_BEST_MODE( tempCS, bestCS, m_pcRdCost->getLambda() );
 #endif
 
-    if( m_modeCtrl->useModeResult( encTestMode, tempCS, partitioner ) )
+    if( m_modeCtrl->useModeResult( encTestMode, tempCS, partitioner ) )//当前encTestMode更好
     {
-      ccGetSplitType(encTestMode, tempCS->ccBestSplit);/* Chaos */
+      ccSetSplitType(encTestMode, tempCS->ccBestSplit);/* Chaos 设置当前模式及划分类型，作为best的info*/
       std::swap( tempCS, bestCS );//直接就交换 tempCS 和 bestCS 了？
       // store temp best CI for next CU coding
       m_CurrCtx->best = m_CABACEstimator->getCtx();
@@ -638,7 +2568,7 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
   const UnitArea currCsArea = clipArea( CS::getArea( *bestCS, bestCS->area, partitioner.chType ), *tempCS->picture );
 
   m_modeCtrl->initCULevel( partitioner, *tempCS );
-  if( partitioner.currQtDepth == 0 && partitioner.currMtDepth == 0 && !tempCS->slice->isIntra() && ( sps.getUseSBT() || sps.getUseInterMTS() ) )
+  if( partitioner.currQTDepth == 0 && partitioner.currMTDepth == 0 && !tempCS->slice->isIntra() && ( sps.getUseSBT() || sps.getUseInterMTS() ) )
   {
     auto slsSbt = dynamic_cast<SaveLoadEncInfoSbt*>( m_modeCtrl );
     int maxSLSize = sps.getUseSBT() ? tempCS->slice->getSPS()->getMaxTbSize() : MTS_INTER_MAX_CU_SIZE;
@@ -712,7 +2642,7 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
     }
   }
   /*添加快速算法的代码，添加resetTestMode(cs,)*/
-  
+  /*Chaos*/
   ccResetTestMode(tempCS,partitioner);
 
   do//check CU 的每个 testmode
@@ -724,6 +2654,18 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
       memcpy(tempCS->prevPLT.curPLT[i], curLastPLT[i], curLastPLTSize[comID] * sizeof(Pel));
     }
     EncTestMode currTestMode = m_modeCtrl->currTestMode();/* ................. */
+    
+    uint8_t flowFlag;
+    m_modeCtrl->cccontrolValidTestMode(flowFlag, currTestMode, partitioner, *tempCS, *bestCS);
+    if (0 == flowFlag)
+    {
+      continue;
+    }
+    else if (2 == flowFlag)
+    {
+      break;
+    }
+
     currTestMode.maxCostAllowed = maxCostAllowed;
 
     if (pps.getUseDQP() && partitioner.isSepTree(*tempCS) && isChroma( partitioner.chType ))
@@ -903,6 +2845,7 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
         }
 
         xCheckModeSplit( tempCS, bestCS, partitioner, currTestMode, modeTypeParent, skipInterPass );//ready to check
+        //CheckModeSplit后 bestCS也被更新了
         //recover cons modes
         tempCS->modeType = partitioner.modeType = modeTypeParent;
         tempCS->treeType = partitioner.treeType = treeTypeParent;
@@ -937,8 +2880,9 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
     {
       THROW( "Don't know how to handle mode: type = " << currTestMode.type << ", options = " << currTestMode.opts );
     }
-  } while( m_modeCtrl->nextMode( *tempCS, partitioner ) );
-
+  } while( m_modeCtrl->nextMode( *tempCS, partitioner ) );//next
+  
+  //在这里可能已经更完了best了,dont'split也被跳过了
 
   //////////////////////////////////////////////////////////////////////////
   // Finishing CU
@@ -1002,7 +2946,7 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
   }
 
 #endif
-  if (bestCS->cus.size() == 1) // no partition
+  if (bestCS->cus.size() == 1) // no partition： INTRA INTER
   {
     CHECK(bestCS->cus[0]->tileIdx != bestCS->pps->getTileIdx(bestCS->area.lumaPos()), "Wrong tile index!");
     if (bestCS->cus[0]->predMode == MODE_PLT)
@@ -1041,6 +2985,8 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
   CHECK( bestCS->cus.empty()                                   , "No possible encoding found" );
   CHECK( bestCS->cus[0]->predMode == NUMBER_OF_PREDICTION_MODES, "No possible encoding found" );
   CHECK( bestCS->cost             == MAX_DOUBLE                , "No possible encoding found" );
+
+
 }
 
 #if SHARP_LUMA_DELTA_QP || ENABLE_QPA_SUB_CTU
@@ -1316,7 +3262,7 @@ void EncCu::xCheckModeSplit(CodingStructure *&tempCS, CodingStructure *&bestCS, 
     }
   }
 
-
+  
   partitioner.splitCurrArea( split, *tempCS );//应该是   根据 split 修改partitioner（将新的东西入栈）
   bool qgEnableChildren = partitioner.currQgEnable();// QG possible at children level
 
@@ -1544,7 +3490,7 @@ void EncCu::xCheckModeSplit(CodingStructure *&tempCS, CodingStructure *&bestCS, 
         ad->setMaxMinDepth( minDepth, maxDepth, *tempCS );
       }
 
-      if( minDepth > partitioner.currQtDepth )
+      if( minDepth > partitioner.currQTDepth )
       {
         // enforce QT
         enforceQT = true;

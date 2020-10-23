@@ -207,9 +207,9 @@ void DeriveCtx::CtxSplit( const CodingStructure& cs, Partitioner& partitioner, u
   //////////////////////////
   // CTX is qt split (0-5)
   //////////////////////////
-  ctxQt =  ( cuLeft  && cuLeft->qtDepth  > partitioner.currQtDepth ) ? 1 : 0;
-  ctxQt += ( cuAbove && cuAbove->qtDepth > partitioner.currQtDepth ) ? 1 : 0;
-  ctxQt += partitioner.currQtDepth < 2 ? 0 : 3;
+  ctxQt =  ( cuLeft  && cuLeft->qtDepth  > partitioner.currQTDepth ) ? 1 : 0;
+  ctxQt += ( cuAbove && cuAbove->qtDepth > partitioner.currQTDepth ) ? 1 : 0;
+  ctxQt += partitioner.currQTDepth < 2 ? 0 : 3;
 
   ////////////////////////////
   // CTX is ver split (0-4)
@@ -245,8 +245,8 @@ void DeriveCtx::CtxSplit( const CodingStructure& cs, Partitioner& partitioner, u
   //////////////////////////
   // CTX is h/v bt (0-3)
   //////////////////////////
-  ctxHorBt = ( partitioner.currMtDepth <= 1 ? 1 : 0 );
-  ctxVerBt = ( partitioner.currMtDepth <= 1 ? 3 : 2 );
+  ctxHorBt = ( partitioner.currMTDepth <= 1 ? 1 : 0 );
+  ctxVerBt = ( partitioner.currMTDepth <= 1 ? 3 : 2 );
 }
 
 unsigned DeriveCtx::CtxQtCbf( const ComponentID compID, const bool prevCbf, const int ispIdx )

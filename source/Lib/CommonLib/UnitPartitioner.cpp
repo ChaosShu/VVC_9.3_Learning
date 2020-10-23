@@ -139,8 +139,8 @@ void Partitioner::setCUData( CodingUnit& cu )
 {
   cu.depth       = currDepth;
   cu.btDepth     = currBtDepth;
-  cu.mtDepth     = currMtDepth;
-  cu.qtDepth     = currQtDepth;
+  cu.mtDepth     = currMTDepth;
+  cu.qtDepth     = currQTDepth;
   cu.splitSeries = getSplitSeries();
   cu.modeTypeSeries = getModeTypeSeries();
 }
@@ -149,9 +149,9 @@ void Partitioner::copyState( const Partitioner& other )
 {
   m_partStack = other.m_partStack;
   currBtDepth = other.currBtDepth;
-  currQtDepth = other.currQtDepth;
+  currQTDepth = other.currQTDepth;
   currDepth   = other.currDepth;
-  currMtDepth = other.currMtDepth;
+  currMTDepth = other.currMTDepth;
   currTrDepth = other.currTrDepth;
   currSubdiv  = other.currSubdiv;
   currQgPos   = other.currQgPos;
@@ -260,8 +260,8 @@ void QTBTPartitioner::initCtu( const UnitArea& ctuArea, const ChannelType _chTyp
   currDepth   = 0;
   currTrDepth = 0;
   currBtDepth = 0;
-  currMtDepth = 0;
-  currQtDepth = 0;
+  currMTDepth = 0;
+  currQTDepth = 0;
   currSubdiv  = 0;
   currQgPos   = ctuArea.lumaPos();
   currQgChromaPos = ctuArea.chromaFormat != CHROMA_400 ? ctuArea.chromaPos() : Position();
@@ -340,7 +340,7 @@ void QTBTPartitioner::splitCurrArea( const PartSplit split, const CodingStructur
   {//DEBUG TO  OBSERVE  THE  FUNCTION
     currBtDepth++;// MT AFTER BT?
     if( isImplicit ) currImplicitBtDepth++;
-    currMtDepth++;
+    currMTDepth++;
 
     if( split == CU_TRIH_SPLIT || split == CU_TRIV_SPLIT )
     {
@@ -353,10 +353,10 @@ void QTBTPartitioner::splitCurrArea( const PartSplit split, const CodingStructur
   else if( split == CU_QUAD_SPLIT )
   {
     CHECK( currBtDepth > 0, "Cannot split a non-square area other than with a binary split" );
-    CHECK( currMtDepth > 0, "Cannot split a non-square area other than with a binary split" );
-    currMtDepth = 0;
+    CHECK( currMTDepth > 0, "Cannot split a non-square area other than with a binary split" );
+    currMTDepth = 0;
     currBtDepth = 0;
-    currQtDepth++;
+    currQTDepth++;
     currSubdiv++;
   }
   qgEnable       &= (currSubdiv <= cs.slice->getCuQpDeltaSubdiv());
@@ -381,7 +381,7 @@ void QTBTPartitioner::canSplit( const CodingStructure &cs, bool& canNo, bool& ca
   const unsigned minQtSize      = cs.pcv->getMinQtSize ( *cs.slice, chType );
 
   canNo = canQt = canBh = canTh = canBv = canTv = true;
-  bool canBtt = currMtDepth < maxBTD;
+  bool canBtt = currMTDepth < maxBTD;
 
   // the minimal and maximal sizes are given in luma samples
   const CompArea&  area  = currArea().Y();
@@ -535,7 +535,7 @@ PartSplit QTBTPartitioner::getImplicitSplit( const CodingStructure &cs )
 
     const CompArea& area      = currArea().Y();
     const unsigned maxBtSize  = cs.pcv->getMaxBtSize( *cs.slice, chType );
-    const bool isBtAllowed    = area.width <= maxBtSize && area.height <= maxBtSize && currMtDepth < (cs.pcv->getMaxBtDepth(*cs.slice, chType) + currImplicitBtDepth);
+    const bool isBtAllowed    = area.width <= maxBtSize && area.height <= maxBtSize && currMTDepth < (cs.pcv->getMaxBtDepth(*cs.slice, chType) + currImplicitBtDepth);
     const unsigned minQtSize  = cs.pcv->getMinQtSize( *cs.slice, chType );
     const bool isQtAllowed    = area.width >  minQtSize && area.height >  minQtSize && currBtDepth == 0;
 
@@ -594,8 +594,8 @@ void QTBTPartitioner::exitCurrSplit()
   {
     CHECK( !m_partStack.back().checkdIfImplicit, "Didn't check if the current split is implicit" );
     CHECK( currBtDepth == 0, "BT depth is '0', athough a BT split was performed" );
-    CHECK( currMtDepth == 0, "MT depth is '0', athough a BT split was performed" );
-    currMtDepth--;
+    CHECK( currMTDepth == 0, "MT depth is '0', athough a BT split was performed" );
+    currMTDepth--;
     if( m_partStack.back().isImplicit ) currImplicitBtDepth--;
     currBtDepth--;
     if( ( currSplit == CU_TRIH_SPLIT || currSplit == CU_TRIV_SPLIT ) && currIdx != 1 )
@@ -619,8 +619,8 @@ void QTBTPartitioner::exitCurrSplit()
   {
     CHECK( currTrDepth > 0, "RQT found with QTBT partitioner" );
 
-    CHECK( currQtDepth == 0, "QT depth is '0', although a QT split was performed" );
-    currQtDepth--;
+    CHECK( currQTDepth == 0, "QT depth is '0', although a QT split was performed" );
+    currQTDepth--;
     currSubdiv--;
   }
 }
