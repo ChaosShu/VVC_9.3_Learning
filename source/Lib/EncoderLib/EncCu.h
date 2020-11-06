@@ -232,9 +232,10 @@ public:
   EncModeCtrl* getModeCtrl  () { return m_modeCtrl; }
 
   /***** Chaos ******/
+  static std::string ccCsvFile;
   bool ccGetSplitFlag(CodingStructure* &tempCS,Partitioner &partitioner, bool &mtSplitFlag, bool &qtSplitFlag, double &adjDepth) const;
   void ccSetSplitType(const EncTestMode& encTestMode, int &ccSplitType);
-  void ccExtractFt(const CodingStructure*& bestCS, Partitioner& partitioner, char* &filename);
+  void ccExtractFt(CodingStructure* bestCS, Partitioner& partitioner, string filename);
   /******************/
 
   void   setMergeBestSATDCost(double cost) { m_mergeBestSATDCost = cost; }

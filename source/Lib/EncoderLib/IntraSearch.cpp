@@ -568,7 +568,7 @@ bool IntraSearch::estIntraPredLumaQT(CodingUnit &cu, Partitioner &partitioner, c
               pu.intraDir[0] = modeIdx;
 
               initPredIntraParams(pu, pu.Y(), sps);
-              predIntraAng(COMPONENT_Y, piPred, pu);
+              predIntraAng(COMPONENT_Y, piPred, pu);/***************************************************Chaos*/
               // Use the min between SAD and HAD as the cost criterion
               // SAD is scaled by 2 to align with the scaling of HAD
               minSadHad += std::min(distParamSad.distFunc(distParamSad) * 2, distParamHad.distFunc(distParamHad));

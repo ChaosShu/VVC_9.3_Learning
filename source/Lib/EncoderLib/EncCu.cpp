@@ -215,7 +215,9 @@ EncCu::~EncCu()
 {
 }
 
-/*    Algorithm of early Termination ffffff  */
+/*    Algorithm of early Termination CHAOSffffff  CHaos*/
+std::string ccCsvFile;
+
 bool EncCu::ccGetSplitFlag(CodingStructure*& tempCS, Partitioner& partitioner, bool& mtSplitFlag, bool& qtSplitFlag, double& adjDepth) const{
   Slice& slice = *tempCS->slice;
 
@@ -311,7 +313,7 @@ void EncCu::ccSetSplitType(const EncTestMode &encTestMode, int &ccSplitType)
   }
 }
 
-void EncCu::ccExtractFt(const CodingStructure*& bestCS, Partitioner& partitioner, char*& filename) {
+void EncCu::ccExtractFt(CodingStructure* bestCS, Partitioner& partitioner, string filename) {
   int selectedSplit = bestCS->ccBestSplit;//result
   auto x0 = bestCS->area.Y().x;
   auto y0 = bestCS->area.Y().y;
@@ -322,8 +324,15 @@ void EncCu::ccExtractFt(const CodingStructure*& bestCS, Partitioner& partitioner
   const int currQTDepth = partitioner.currQTDepth;      //x1
   const int currMTDepth = partitioner.currMTDepth;      //x2
 
-  const UnitArea currArea = clipArea(CS::getArea(*bestCS, bestCS->area, partitioner.chType), *bestCS->picture);
-  const CPelBuf picOri = bestCS->getOrgBuf(currArea).Y();
+  //const UnitArea currArea = clipArea(CS::getArea(*bestCS, bestCS->area, partitioner.chType), *bestCS->picture);
+  //const CPelBuf picOri = bestCS->getOrgBuf(currArea).Y();
+
+  int xxxpoc = bestCS->slice->getPOC() << 3;
+  ofstream mTraceF;
+  mTraceF.open(filename, ios::app);
+  mTraceF << xxxpoc << ',' << x0 << ',' << y0 << ',' << width << ',' << height << ',' << bestCS->ccBestSplit << ',' 
+    << totalPixel << ','<< currQTDepth << ',' << currMTDepth << endl;
+  mTraceF.close();
 
 }
 
@@ -2643,7 +2652,7 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
   }
   /*添加快速算法的代码，添加resetTestMode(cs,)*/
   /*Chaos*/
-  ccResetTestMode(tempCS,partitioner);
+  //ccResetTestMode(tempCS,partitioner);
 
   do//check CU 的每个 testmode
   {
@@ -2655,7 +2664,7 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
     }
     EncTestMode currTestMode = m_modeCtrl->currTestMode();/* ................. */
     
-    uint8_t flowFlag;
+    /*uint8_t flowFlag{ 1 };
     m_modeCtrl->cccontrolValidTestMode(flowFlag, currTestMode, partitioner, *tempCS, *bestCS);
     if (0 == flowFlag)
     {
@@ -2664,7 +2673,7 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
     else if (2 == flowFlag)
     {
       break;
-    }
+    }*/
 
     currTestMode.maxCostAllowed = maxCostAllowed;
 
@@ -2985,6 +2994,10 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
   CHECK( bestCS->cus.empty()                                   , "No possible encoding found" );
   CHECK( bestCS->cus[0]->predMode == NUMBER_OF_PREDICTION_MODES, "No possible encoding found" );
   CHECK( bestCS->cost             == MAX_DOUBLE                , "No possible encoding found" );
+  
+  
+  /*Chaos*/
+  ccExtractFt(bestCS, partitioner, EncCu::ccCsvFile);
 
 
 }

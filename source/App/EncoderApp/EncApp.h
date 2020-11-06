@@ -121,6 +121,11 @@ public:
   VPS * getVPS() { return m_cEncLib.getVPS(); }
   int   getChromaFormatIDC() const { return m_cEncLib.getChromaFormatIdc(); }
   int   getBitDepth() const { return m_cEncLib.getBitDepth(CHANNEL_TYPE_LUMA); }
+
+  /*chaos is here*/
+  std::string ccgetInputVideoName() const { return m_inputFileName; }
+ // std::string ccgetConfigFileName() const {return m_cofile}
+  int ccgetQP() const { return m_iQP; }
 };// END CLASS DEFINITION EncApp
 
 //! \}

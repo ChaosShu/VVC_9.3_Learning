@@ -86,6 +86,7 @@ protected:
   std::string m_bitstreamFileName;                            ///< output bitstream file
   std::string m_reconFileName;                                ///< output reconstruction file
 
+
   // Lambda modifiers
   double    m_adLambdaModifier[ MAX_TLAYER ];                 ///< Lambda modifier array for each temporal layer
   std::vector<double> m_adIntraLambdaModifier;                ///< Lambda modifier for Intra pictures, one for each temporal layer. If size>temporalLayer, then use [temporalLayer], else if size>0, use [size()-1], else use m_adLambdaModifier.
