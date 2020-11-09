@@ -216,7 +216,7 @@ EncCu::~EncCu()
 }
 
 /*    Algorithm of early Termination CHAOSffffff  CHaos*/
-std::string ccCsvFile;
+//std::string ccCsvFile;
 
 bool EncCu::ccGetSplitFlag(CodingStructure*& tempCS, Partitioner& partitioner, bool& mtSplitFlag, bool& qtSplitFlag, double& adjDepth) const{
   Slice& slice = *tempCS->slice;
@@ -336,6 +336,113 @@ void EncCu::ccExtractFt(CodingStructure* bestCS, Partitioner& partitioner, strin
 
 }
 
+double EncCu::ccCaculEntropy(CodingStructure *&tempCS)
+{
+  auto CurrUnit = clipArea(CS::getArea(*tempCS, tempCS->area, CHANNEL_TYPE_LUMA ), *tempCS->picture);
+  int w = CurrUnit.lwidth();
+  int h = CurrUnit.lheight();
+  PelBuf picOri = tempCS->getOrgBuf(CurrUnit.Y());
+  Pel freqTbl[256]{ 0 };
+
+  for (int i = 0; i < w; i++)
+  {
+    for (int j = 0; j < h; j++)
+    {
+      freqTbl[picOri.at(i, j)]++;
+    }
+  }
+  double Entropy{ 0 }, temp{ 0 };
+  int pixNums{ w * h };
+  for (int i = 0; i < 256; i++)
+  {
+    temp = freqTbl[i];
+    if ( temp )
+    {
+      temp = temp / pixNums;    //概率
+      temp = -temp * log2(temp);//熵
+    }
+    Entropy += temp;
+  }
+  return Entropy;
+}
+
+void EncCu::ccEarlyConsTestMode(CodingStructure*& tempCS, Partitioner& partitioner)
+{
+  auto* currTestMode = &(m_modeCtrl->getComprCUCtx().testModes);
+  const UnitArea curArea= clipArea(CS::getArea(*tempCS, tempCS->area, partitioner.chType), *tempCS->picture);
+  PelBuf picOri = tempCS->getOrgBuf(curArea).Y();
+
+  SizeType w = curArea.lwidth();
+  SizeType h = curArea.lheight();
+
+  if (w == 4 || h == 4) //太小了，没必要
+  {
+    return;
+  }
+  /*
+
+  int tempGradH{ 0 }, tempGradV{ 0 }, pixNums, GlbAvgG{ 0 }, tempSum{ 0 };
+  int LavgG{ 0 }, RavgG{ 0 }, TavgG{ 0 }, BavgG{ 0 }, LTavgG{ 0 }, RTavgG{ 0 }, LBavgG{ 0 }, RBavgG{ 0 };// guiding mark
+  int lBound = (w >> 1);
+  int tBound = (h >> 1);
+  int rBound = lBound + 1;
+  int bBound = tBound + 1;
+  CHECKD(rBound > w, "Erro in Feature Guided Early Termination");
+  CHECKD(bBound > h, "Erro in Feature Guided Early Termination");
+  pixNums = w * h;
+  for (auto i = 1; i < w - 1; i++)
+  {
+    for (auto j = 1; j < h - 1; j++)
+    {
+      tempGradV = abs(picOri.at(i - 1, j + 1) + 2 * picOri.at(i, j + 1) + picOri.at(i + 1, j + 1)
+        - (picOri.at(i - 1, j - 1) + 2 * picOri.at(i, j - 1) + picOri.at(i + 1, j - 1)));
+      tempGradH = abs( picOri.at(i + 1, j - 1) + 2 * picOri.at(i + 1, j) + picOri.at(i + 1, j + 1)
+        - (picOri.at(i - 1, j - 1) + 2 * picOri.at(i - 1, j) + picOri.at(i - 1, j + 1)) );
+
+      tempSum = tempGradV + tempGradH;
+      GlbAvgG += tempSum;
+      if (i < lBound)  //left
+      {
+        LavgG += tempSum;
+        if (j < tBound)   //left top
+        {
+          LTavgG += tempSum;
+        }
+        else if (j > bBound)//left bottom
+        {
+          LBavgG += tempSum;
+        }
+      }
+      else if (i > rBound)//right
+      {
+        RavgG += tempSum;
+        if (j < tBound)   //right top
+        {
+          RTavgG += tempSum;
+        }
+        else if (j > bBound) //right bottom
+        {
+          RBavgG += tempSum;
+        }
+      }            
+    }
+  }
+
+  GlbAvgG /= pixNums;
+  int hfPixNums = pixNums >> 1;
+  int qdPixNums = pixNums >> 2;
+  LavgG /= hfPixNums;
+  RavgG /= hfPixNums;
+  LTavgG /= qdPixNums;
+  LBavgG /= qdPixNums;
+  RTavgG /= qdPixNums;
+  RBavgG /= qdPixNums;
+
+  */
+
+  auto Entropy = ccCaculEntropy(tempCS);//shit，要计算UNIT才行啊，否则tempCS可能会超界的啊啊
+  m_modeCtrl->ccUpdateTMbyEntropy(Entropy);
+}
 
 void EncCu::ccResetTestMode(CodingStructure *&tempCS, Partitioner &partitioner)
 {
@@ -344,8 +451,8 @@ void EncCu::ccResetTestMode(CodingStructure *&tempCS, Partitioner &partitioner)
   const int currQTDepth = partitioner.currQTDepth;      //x2
   const int currMTDepth = partitioner.currMTDepth;      //x3
   int currQP = tempCS->currQP[CHANNEL_TYPE_LUMA];       //...
-  const UnitArea currArea = clipArea(CS::getArea(*tempCS, tempCS->area, partitioner.chType), *tempCS->picture);
-  PelBuf picOri = tempCS->getOrgBuf(currArea).Y();
+  const UnitArea currArea = clipArea(CS::getArea(*tempCS, tempCS->area, partitioner.chType), *tempCS->picture);//UnitArea信息
+  PelBuf picOri = tempCS->getOrgBuf(currArea).Y();//原始pic信息
   SizeType currW = currArea.lwidth();
   SizeType currH = currArea.lheight();
 
@@ -2653,6 +2760,7 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
   /*添加快速算法的代码，添加resetTestMode(cs,)*/
   /*Chaos*/
   //ccResetTestMode(tempCS,partitioner);
+  ccEarlyConsTestMode(tempCS, partitioner);
 
   do//check CU 的每个 testmode
   {
@@ -2664,7 +2772,7 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
     }
     EncTestMode currTestMode = m_modeCtrl->currTestMode();/* ................. */
     
-    /*uint8_t flowFlag{ 1 };
+    uint8_t flowFlag{ 1 };
     m_modeCtrl->cccontrolValidTestMode(flowFlag, currTestMode, partitioner, *tempCS, *bestCS);
     if (0 == flowFlag)
     {
@@ -2673,7 +2781,7 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
     else if (2 == flowFlag)
     {
       break;
-    }*/
+    }
 
     currTestMode.maxCostAllowed = maxCostAllowed;
 
@@ -2997,7 +3105,7 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
   
   
   /*Chaos*/
-  ccExtractFt(bestCS, partitioner, EncCu::ccCsvFile);
+  //ccExtractFt(bestCS, partitioner, EncCu::ccCsvFile);
 
 
 }
@@ -3276,7 +3384,7 @@ void EncCu::xCheckModeSplit(CodingStructure *&tempCS, CodingStructure *&bestCS, 
   }
 
   
-  partitioner.splitCurrArea( split, *tempCS );//应该是   根据 split 修改partitioner（将新的东西入栈）
+  partitioner.splitCurrArea( split, *tempCS );//应该是   根据 split 修改partitioner（将新的东西入栈），这里是一个隐式转换，由Partitioner类转换到QTMTPartitioner类，调用了第二2层派生类的方法
   bool qgEnableChildren = partitioner.currQgEnable();// QG possible at children level
 
   m_CurrCtx++;

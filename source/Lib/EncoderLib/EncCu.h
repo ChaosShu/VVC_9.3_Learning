@@ -232,10 +232,11 @@ public:
   EncModeCtrl* getModeCtrl  () { return m_modeCtrl; }
 
   /***** Chaos ******/
-  static std::string ccCsvFile;
+  //static std::string ccCsvFile;
   bool ccGetSplitFlag(CodingStructure* &tempCS,Partitioner &partitioner, bool &mtSplitFlag, bool &qtSplitFlag, double &adjDepth) const;
   void ccSetSplitType(const EncTestMode& encTestMode, int &ccSplitType);
   void ccExtractFt(CodingStructure* bestCS, Partitioner& partitioner, string filename);
+  double ccCaculEntropy(CodingStructure*& tempCS);
   /******************/
 
   void   setMergeBestSATDCost(double cost) { m_mergeBestSATDCost = cost; }
@@ -307,7 +308,9 @@ protected:
   void xCheckRDCostIBCModeMerge2Nx2N( CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &partitioner, const EncTestMode& encTestMode );
 
   void xCheckPLT              ( CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &partitioner, const EncTestMode& encTestMode );
+  
   void ccResetTestMode(CodingStructure*& tempCS, Partitioner& partitioner);// my member function
+  void ccEarlyConsTestMode(CodingStructure*& tempCS, Partitioner& partitioner);
 };
 
 //! \}

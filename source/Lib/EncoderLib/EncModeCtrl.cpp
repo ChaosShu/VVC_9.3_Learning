@@ -212,6 +212,31 @@ void EncModeCtrl::initLumaDeltaQpLUT()
 }
 
 /*Chaos*/
+void EncModeCtrl::ccUpdateTMbyEntropy(double entropy)
+{
+  int Aqp = m_ComprCUCtxList.back().testModes.back().qp;
+  auto xxx = m_ComprCUCtxList.back().testModes;             //xxx.size() <=2 说明只有INTRA + Dummy MODE 或者只有QT
+  if (entropy - 5.0 > 0.01)
+  {
+    if (xxx.back().type == ETM_INTRA && xxx.size() > 2)
+    {
+      m_ComprCUCtxList.back().testModes.pop_back();
+      std::swap(m_ComprCUCtxList.back().testModes[xxx.size() - 3], m_ComprCUCtxList.back().testModes[xxx.size() - 2]);
+      m_ComprCUCtxList.back().testModes.insert(m_ComprCUCtxList.back().testModes.begin(),{ ETM_INTRA,ETO_STANDARD,Aqp });
+    }
+  }
+  else if (entropy - 1.5 < 0.01 && xxx.size() > 2)
+  {
+    if (m_ComprCUCtxList.back().testModes.back().type == ETM_INTRA)
+    {
+      m_ComprCUCtxList.back().testModes.clear();
+      m_ComprCUCtxList.back().testModes.push_back({ ETM_INTRA,ETO_STANDARD,Aqp });
+      m_ComprCUCtxList.back().testModes.push_back({ { ETM_POST_DONT_SPLIT } });
+      m_ComprCUCtxList.back().testModes.push_back({ ETM_INTRA,ETO_STANDARD,Aqp });
+    }
+  }
+}
+
 void EncModeCtrl::cccontrolValidTestMode(uint8_t &flowFlag, EncTestMode testMode, Partitioner& partitioner, CodingStructure& tempCS, CodingStructure& bestCS)
 {
   if (!partitioner.canSplit(getPartSplit(testMode), tempCS))//模式不满足VVC的划分约束xxxxxx跳到CU下一个划分,用 continue继续do
@@ -221,7 +246,7 @@ void EncModeCtrl::cccontrolValidTestMode(uint8_t &flowFlag, EncTestMode testMode
   }
   if ((m_ComprCUCtxList.back().testModes.front().type == ETM_INTRA) && (m_ComprCUCtxList.back().testModes.size() == 1))//帧内被禁止的情况
   {
-    if (!bestCS.cus.size()) {//除了帧内的其他模式都不可用(bestCS的cus仍然是默认的0)xxxxxx继续当前划分，do nothing
+    if (!bestCS.cus.size()) {//除了帧内的其他模式都不可用(即bestCS的cus仍然是默认的0),xxxxxx继续当前划分，do nothing
       flowFlag = 1;
     }
     else//已经有其他可用的模式被选为bestModexxxxxx结束CU划分
@@ -1291,10 +1316,10 @@ void EncModeCtrlMTnoRQT::initCULevel( Partitioner &partitioner, const CodingStru
   /*QT & TT*/
   if( !cuECtx.get<bool>( QT_BEFORE_BT ) )
   {// qt after bt
-    for( int qp = maxQP; qp >= minQP; qp-- )
-    {
-      m_ComprCUCtxList.back().testModes.push_back( { ETM_SPLIT_QT, ETO_STANDARD, qp } );//连QP都会作为参数进行RDO了吗？
-    }
+      for (int qp = maxQP; qp >= minQP; qp--)
+      {
+        m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_QT, ETO_STANDARD, qp });//连QP都会作为参数进行RDO了吗？
+      }
   }
 
   if( partitioner.canSplit( CU_TRIV_SPLIT, cs ) )
@@ -1349,10 +1374,12 @@ void EncModeCtrlMTnoRQT::initCULevel( Partitioner &partitioner, const CodingStru
 
   if( cuECtx.get<bool>( QT_BEFORE_BT ) )
   {
-    for( int qp = maxQPq; qp >= minQPq; qp-- )
+
+    for (int qp = maxQPq; qp >= minQPq; qp--)
     {
-      m_ComprCUCtxList.back().testModes.push_back( { ETM_SPLIT_QT, ETO_STANDARD, qp } );
+      m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_QT, ETO_STANDARD, qp });
     }
+
   }
 
   m_ComprCUCtxList.back().testModes.push_back( { ETM_POST_DONT_SPLIT } );//DONT_SPLIT Is first

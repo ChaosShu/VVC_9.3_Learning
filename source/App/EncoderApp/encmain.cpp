@@ -84,7 +84,7 @@ static void printMacroSettings()
 // Main function
 // ====================================================================================================================
 
-std::string EncCu::ccCsvFile = "";/*我Chaos当场裂开了呀*/
+//std::string EncCu::ccCsvFile = "";/*我Chaos当场裂开了呀*/
 int main(int argc, char* argv[])
 {
   // print information
@@ -239,7 +239,7 @@ int main(int argc, char* argv[])
   bool eos = false;
   /*unsigned short GOP_cnt{ 0 };///@UpdatedBy:Chaos */
 
-  std::string vdo_name = pcEncApp[0]->ccgetInputVideoName();
+  /*std::string vdo_name = pcEncApp[0]->ccgetInputVideoName();
   auto cccIndex = vdo_name.find_first_of('_');
   vdo_name = vdo_name.substr(0,cccIndex);
   int xxxqp = pcEncApp[0]->ccgetQP();
@@ -248,7 +248,7 @@ int main(int argc, char* argv[])
   mTraceF.open(MyTraceFile, ios::out);
   mTraceF << "poc,x0,y0,width,height,bestSplit,totalPixel,currQTDepth,currMTDepth" << endl;
   mTraceF.close();
-  EncCu::ccCsvFile = MyTraceFile;
+  EncCu::ccCsvFile = MyTraceFile;*/
   
   while( !eos )
   { //while每执行一次，代表已编码完一整个GOP

@@ -321,6 +321,7 @@ public:
           /*Chaos*/
           void resetTMCandidate(bool* testModeFlag, int qp);
           void cccontrolValidTestMode(uint8_t& flowFlag, EncTestMode testMode, Partitioner &partitioner, CodingStructure& tempCS, CodingStructure& bestCS);
+          void ccUpdateTMbyEntropy(double entropy);
 
   void         init                 ( EncCfg *pCfg, RateCtrl *pRateCtrl, RdCost *pRdCost );
   bool         tryModeMaster        ( const EncTestMode& encTestmode, const CodingStructure &cs, Partitioner& partitioner );

@@ -94,7 +94,7 @@ public:
   APS *      lmcsAps;
   APS *      scalinglistAps;
   const VPS *vps;
-  const PreCalcValues* pcv;//预计算值
+  const PreCalcValues* pcv;//预计算值, 最大CTUSize啊，CUSize啊，log2Size啊等等
 
   CodingStructure(CUCache&, PUCache&, TUCache&);
 
