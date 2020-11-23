@@ -318,10 +318,12 @@ public:
   virtual bool parallelJobSelector  ( const EncTestMode& encTestmode, const CodingStructure &cs, Partitioner& partitioner ) const { return true;  }
           void setParallelSplit     ( bool val ) { m_runNextInParallel = val; }
 #endif
-          /*Chaos*/
-          void resetTMCandidate(bool* testModeFlag, int qp);
-          void cccontrolValidTestMode(uint8_t& flowFlag, EncTestMode testMode, Partitioner &partitioner, CodingStructure& tempCS, CodingStructure& bestCS);
-          void ccUpdateTMbyEntropy(double entropy);
+  /*Chaos*/
+  static std::string ccVideoName;
+  /*void resetTMCandidate(bool* testModeFlag, int qp);*/
+  void cccontrolValidTestMode(uint8_t& flowFlag, EncTestMode testMode, Partitioner &partitioner, CodingStructure& tempCS, CodingStructure& bestCS);
+  void ccUpdateTMbyEntropy(double entropy);
+  void ccUpdateTMbyGradient(double gradient, int QP);
 
   void         init                 ( EncCfg *pCfg, RateCtrl *pRateCtrl, RdCost *pRdCost );
   bool         tryModeMaster        ( const EncTestMode& encTestmode, const CodingStructure &cs, Partitioner& partitioner );

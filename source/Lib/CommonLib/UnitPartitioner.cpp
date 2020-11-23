@@ -627,7 +627,7 @@ void QTBTPartitioner::exitCurrSplit()
 
 bool QTBTPartitioner::nextPart( const CodingStructure &cs, bool autoPop /*= false*/ )
 {
-  const Position &prevPos = currArea().blocks[chType].pos();
+  const Position &prevPos = currArea().blocks[chType].pos();//当前区域根节点
 
   unsigned currIdx = ++m_partStack.back().idx;
 

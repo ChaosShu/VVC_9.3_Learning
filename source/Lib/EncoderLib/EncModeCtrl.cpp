@@ -215,25 +215,122 @@ void EncModeCtrl::initLumaDeltaQpLUT()
 void EncModeCtrl::ccUpdateTMbyEntropy(double entropy)
 {
   int Aqp = m_ComprCUCtxList.back().testModes.back().qp;
-  auto xxx = m_ComprCUCtxList.back().testModes;             //xxx.size() <=2 说明只有INTRA + Dummy MODE 或者只有QT
-  if (entropy - 5.0 > 0.01)
+  string bqt{ "BQTerrace" }, bbd{ "BasketballDrive" };
+  double UpTH{ 0.0 };
+  switch (Aqp)
   {
-    if (xxx.back().type == ETM_INTRA && xxx.size() > 2)
+  case 37: {
+    if (EncModeCtrl::ccVideoName == bqt)
     {
-      m_ComprCUCtxList.back().testModes.pop_back();
-      std::swap(m_ComprCUCtxList.back().testModes[xxx.size() - 3], m_ComprCUCtxList.back().testModes[xxx.size() - 2]);
-      m_ComprCUCtxList.back().testModes.insert(m_ComprCUCtxList.back().testModes.begin(),{ ETM_INTRA,ETO_STANDARD,Aqp });
+      UpTH = 6.245;
     }
+    else if (EncModeCtrl::ccVideoName == bbd)
+    {
+      UpTH = 6.004;
+    }
+    break;
   }
-  else if (entropy - 1.5 < 0.01 && xxx.size() > 2)
-  {
-    if (m_ComprCUCtxList.back().testModes.back().type == ETM_INTRA)
+  case 32: {
+    if (EncModeCtrl::ccVideoName == bqt)
     {
-      m_ComprCUCtxList.back().testModes.clear();
-      m_ComprCUCtxList.back().testModes.push_back({ ETM_INTRA,ETO_STANDARD,Aqp });
-      m_ComprCUCtxList.back().testModes.push_back({ { ETM_POST_DONT_SPLIT } });
-      m_ComprCUCtxList.back().testModes.push_back({ ETM_INTRA,ETO_STANDARD,Aqp });
+      UpTH = 5.067;
     }
+    else if (EncModeCtrl::ccVideoName == bbd)
+    {
+      UpTH = 5.832;
+    }
+    break;
+  }
+  case 27: {
+    if (EncModeCtrl::ccVideoName == bqt)
+    {
+      UpTH = 4.893;
+    }
+    else if (EncModeCtrl::ccVideoName == bbd)
+    {
+      UpTH = 5.438;
+    }
+    break;
+  }
+  case 22: {
+    if (EncModeCtrl::ccVideoName == bqt)
+    {
+      UpTH = 4.647;
+    }
+    else if (EncModeCtrl::ccVideoName == bbd)
+    {
+      UpTH = 4.395;
+    }
+    break;
+  }
+  default: std::cerr << "QP is invalid"; break;
+  }
+  if (entropy - UpTH >= 0.001)
+  {
+    m_ComprCUCtxList.back().testModes.clear();
+    m_ComprCUCtxList.back().testModes.push_back({ { ETM_POST_DONT_SPLIT } });
+    m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_QT,ETO_STANDARD,Aqp });
+  }
+}
+
+void EncModeCtrl::ccUpdateTMbyGradient(double gradient, int qp)
+{
+  int Aqp = m_ComprCUCtxList.back().testModes.back().qp;
+  string bqt{ "BQTerrace" }, bbd{ "BasketballDrive" };
+  double UpTH{ 0.0 };
+  switch (qp)
+  {
+  case 37: {
+    if (EncModeCtrl::ccVideoName == bqt)
+    {
+      UpTH = 52.2;
+    }
+    else if (EncModeCtrl::ccVideoName == bbd)
+    {
+      UpTH = 26.7;
+    }
+    break;
+  }
+  case 32: {
+    if (EncModeCtrl::ccVideoName == bqt)
+    {
+      UpTH = 47.4;
+    }
+    else if (EncModeCtrl::ccVideoName == bbd)
+    {
+      UpTH = 25.2;
+    }
+    break;
+  }
+  case 27: {
+    if (EncModeCtrl::ccVideoName == bqt)
+    {
+      UpTH = 42.2;
+    }
+    else if (EncModeCtrl::ccVideoName == bbd)
+    {
+      UpTH = 17.4;
+    }
+    break;
+  }
+  case 22: {
+    if (EncModeCtrl::ccVideoName == bqt)
+    {
+      UpTH = 42.0;
+    }
+    else if (EncModeCtrl::ccVideoName == bbd)
+    {
+      UpTH = 11.5;
+    }
+    break;
+  }
+    default: std::cerr << "QP is invalid"; break;
+  }
+  if (gradient - UpTH >= 0.001)
+  {
+    m_ComprCUCtxList.back().testModes.clear();
+    m_ComprCUCtxList.back().testModes.push_back({ { ETM_POST_DONT_SPLIT } });
+    m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_QT,ETO_STANDARD,Aqp });
   }
 }
 
@@ -257,42 +354,42 @@ void EncModeCtrl::cccontrolValidTestMode(uint8_t &flowFlag, EncTestMode testMode
   }
 }
 
-void EncModeCtrl::resetTMCandidate(bool* testModeFlag, int qp) {
-  if (!testModeFlag[ETM_INTRA]) //帧内被禁了,那肯定时要放个模式进去的，而且说明还需要进一步划分，but why QT?
-  {
-    m_ComprCUCtxList.back().testModes.clear();
-    m_ComprCUCtxList.back().testModes.push_back({ ETM_INTRA, ETO_STANDARD, qp });//in case of erro desicion
-    m_ComprCUCtxList.back().testModes.push_back({ ETM_POST_DONT_SPLIT });//???
-    m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_QT, ETO_STANDARD, qp });
-  }
-  else
-  {
-    m_ComprCUCtxList.back().testModes.clear();
-    if (testModeFlag[ETM_SPLIT_QT])
-    {
-      m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_QT, ETO_STANDARD, qp });
-    }
-    if (testModeFlag[ETM_SPLIT_TT_V])
-    {
-      m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_TT_V, ETO_STANDARD, qp });
-    }
-    if (testModeFlag[ETM_SPLIT_TT_H])
-    {
-      m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_TT_H, ETO_STANDARD, qp });
-    }
-    if (testModeFlag[ETM_SPLIT_BT_V])
-    {
-      m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_BT_V, ETO_STANDARD, qp });
-    }
-    if (testModeFlag[ETM_SPLIT_BT_H])
-    {
-      m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_BT_H, ETO_STANDARD, qp });
-    }
-
-    m_ComprCUCtxList.back().testModes.push_back({ ETM_POST_DONT_SPLIT });
-    m_ComprCUCtxList.back().testModes.push_back({ ETM_INTRA, ETO_STANDARD, qp });
-  }
-}
+//void EncModeCtrl::resetTMCandidate(bool* testModeFlag, int qp) {
+//  if (!testModeFlag[ETM_INTRA]) //帧内被禁了,那肯定时要放个模式进去的，而且说明还需要进一步划分，but why QT?
+//  {
+//    m_ComprCUCtxList.back().testModes.clear();
+//    m_ComprCUCtxList.back().testModes.push_back({ ETM_INTRA, ETO_STANDARD, qp });//in case of erro desicion
+//    m_ComprCUCtxList.back().testModes.push_back({ ETM_POST_DONT_SPLIT });//???
+//    m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_QT, ETO_STANDARD, qp });
+//  }
+//  else
+//  {
+//    m_ComprCUCtxList.back().testModes.clear();
+//    if (testModeFlag[ETM_SPLIT_QT])
+//    {
+//      m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_QT, ETO_STANDARD, qp });
+//    }
+//    if (testModeFlag[ETM_SPLIT_TT_V])
+//    {
+//      m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_TT_V, ETO_STANDARD, qp });
+//    }
+//    if (testModeFlag[ETM_SPLIT_TT_H])
+//    {
+//      m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_TT_H, ETO_STANDARD, qp });
+//    }
+//    if (testModeFlag[ETM_SPLIT_BT_V])
+//    {
+//      m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_BT_V, ETO_STANDARD, qp });
+//    }
+//    if (testModeFlag[ETM_SPLIT_BT_H])
+//    {
+//      m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_BT_H, ETO_STANDARD, qp });
+//    }
+//
+//    m_ComprCUCtxList.back().testModes.push_back({ ETM_POST_DONT_SPLIT });
+//    m_ComprCUCtxList.back().testModes.push_back({ ETM_INTRA, ETO_STANDARD, qp });
+//  }
+//}
 
 int EncModeCtrl::calculateLumaDQP( const CPelBuf& rcOrg )
 {
