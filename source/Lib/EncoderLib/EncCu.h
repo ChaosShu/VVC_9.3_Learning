@@ -232,7 +232,7 @@ public:
   EncModeCtrl* getModeCtrl  () { return m_modeCtrl; }
 
   /***** Chaos ******/
-  //static std::string ccCsvFile;
+  //static std::string ccVideoName;
   bool ccGetSplitFlag(CodingStructure* &tempCS,Partitioner &partitioner, bool &mtSplitFlag, bool &qtSplitFlag, double &adjDepth) const;
   void ccSetSplitType(const EncTestMode& encTestMode, int &ccSplitType);
   void ccExtractFt(CodingStructure* bestCS, Partitioner& partitioner, string filename);
@@ -309,7 +309,7 @@ protected:
 
   void xCheckPLT              ( CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &partitioner, const EncTestMode& encTestMode );
   
-  void ccResetTestMode(CodingStructure*& tempCS, Partitioner& partitioner);// my member function
+  //void ccResetTestMode(CodingStructure*& tempCS, Partitioner& partitioner);// my member function
   void ccEarlyConsTestMode(CodingStructure*& tempCS, Partitioner& partitioner);
 };
 
