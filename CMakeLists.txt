@@ -5,7 +5,7 @@ cmake_minimum_required( VERSION 3.5 FATAL_ERROR )
 if( EXTENSION_360_VIDEO )
   project( NextSoftware360 )
 else()
-  project( NextSoftware )
+  project( NextSoftware9_3 )
 endif()
 
 # use ccache

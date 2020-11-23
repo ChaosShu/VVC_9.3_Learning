@@ -74,7 +74,7 @@ public:
 
   UnitArea         area;
   /*Chaos*/
-  int ccBestSplit;
+  //int ccBestSplit;
 
   Picture         *picture;
   CodingStructure *parent;
