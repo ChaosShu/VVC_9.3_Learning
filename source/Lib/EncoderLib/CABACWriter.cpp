@@ -226,6 +226,7 @@ void CABACWriter::coding_tree_unit( CodingStructure& cs, const UnitArea& area, i
       qps[CH_C] = cuCtxChroma.qp;
     }
   }
+  EncCu::roundFlag = false;
 }
 
 
@@ -421,8 +422,24 @@ void CABACWriter::coding_tree(const CodingStructure& cs, Partitioner& partitione
       pCuCtxChroma->isChromaQpAdjCoded = false;
     }
   }
-
+  
   const PartSplit splitMode = CU::getSplitAtDepth( cu, partitioner.currDepth );
+
+  if (0 == partitioner.chType && EncCu::roundFlag)
+  {
+    auto filename = EncCu::ccCsvFile;/*Chaos  Chaos*/
+    ofstream mTraceF;
+    mTraceF.open(filename, ios::app);
+    auto xxxpoc = cs.slice->getPOC() << 3;//for subSampleRatio : 8
+    auto x0 = partitioner.currArea().lx();
+    auto y0 = partitioner.currArea().ly();
+    auto width = partitioner.currArea().lwidth();
+    auto height = partitioner.currArea().lheight();
+    auto totalPixel = width * height;
+    mTraceF << xxxpoc << ',' << x0 << ',' << y0 << ',' << width << ',' << height << ',' << splitMode << ','
+      << totalPixel << endl;
+    mTraceF.close();
+  }
 
   split_cu_mode( splitMode, cs, partitioner );
 
@@ -485,36 +502,36 @@ void CABACWriter::coding_tree(const CodingStructure& cs, Partitioner& partitione
         {
           partitioner.treeType = chromaNotSplit ? TREE_L : TREE_D;
         }
-      partitioner.splitCurrArea( splitMode, cs );
+        partitioner.splitCurrArea( splitMode, cs );
 
-      do
-      {
-        if( cs.picture->blocks[partitioner.chType].contains( partitioner.currArea().blocks[partitioner.chType].pos() ) )
+        do
         {
-          coding_tree( cs, partitioner, cuCtx );
-        }
-      } while( partitioner.nextPart( cs ) );
+          if( cs.picture->blocks[partitioner.chType].contains( partitioner.currArea().blocks[partitioner.chType].pos() ) )
+          {
+            coding_tree( cs, partitioner, cuCtx );
+          }
+        } while( partitioner.nextPart( cs ) );
 
-      partitioner.exitCurrSplit();
-      if( chromaNotSplit )
-      {
-        if (isChromaEnabled(cs.pcv->chrFormat))
+        partitioner.exitCurrSplit();
+        if( chromaNotSplit )
         {
-        CHECK( partitioner.chType != CHANNEL_TYPE_LUMA, "must be luma status" );
-        partitioner.chType = CHANNEL_TYPE_CHROMA;
-        partitioner.treeType = TREE_C;
+          if (isChromaEnabled(cs.pcv->chrFormat))
+          {
+          CHECK( partitioner.chType != CHANNEL_TYPE_LUMA, "must be luma status" );
+          partitioner.chType = CHANNEL_TYPE_CHROMA;
+          partitioner.treeType = TREE_C;
 
-        if( cs.picture->blocks[partitioner.chType].contains( partitioner.currArea().blocks[partitioner.chType].pos() ) )
-        {
-          coding_tree( cs, partitioner, cuCtx );
-        }
-        }
+          if( cs.picture->blocks[partitioner.chType].contains( partitioner.currArea().blocks[partitioner.chType].pos() ) )
+          {
+            coding_tree( cs, partitioner, cuCtx );
+          }
+          }
 
-        //recover
-        partitioner.chType = CHANNEL_TYPE_LUMA;
-        partitioner.treeType = TREE_D;
-      }
-      partitioner.modeType = modeTypeParent;
+          //recover
+          partitioner.chType = CHANNEL_TYPE_LUMA;
+          partitioner.treeType = TREE_D;
+        }
+        partitioner.modeType = modeTypeParent;
       }
       return;
   }

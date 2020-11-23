@@ -217,7 +217,6 @@ EncCu::~EncCu()
 
 /*    Algorithm of early Termination CHAOSffffff  CHaos*/
 //std::string ccCsvFile;
-
 bool EncCu::ccGetSplitFlag(CodingStructure*& tempCS, Partitioner& partitioner, bool& mtSplitFlag, bool& qtSplitFlag, double& adjDepth) const{
   Slice& slice = *tempCS->slice;
 
@@ -2760,7 +2759,7 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
   /*添加快速算法的代码，添加resetTestMode(cs,)*/
   /*Chaos*/
   //ccResetTestMode(tempCS,partitioner);
-  ccEarlyConsTestMode(tempCS, partitioner);
+  //ccEarlyConsTestMode(tempCS, partitioner);
 
   do//check CU 的每个 testmode
   {
