@@ -2594,7 +2594,7 @@ bool EncCu::xCheckBestMode( CodingStructure *&tempCS, CodingStructure *&bestCS, 
 
     if( m_modeCtrl->useModeResult( encTestMode, tempCS, partitioner ) )//当前encTestMode更好
     {
-      ccSetSplitType(encTestMode, tempCS->ccBestSplit);/* Chaos 设置当前模式及划分类型，作为best的info*/
+      //ccSetSplitType(encTestMode, tempCS->ccBestSplit);/* Chaos 设置当前模式及划分类型，作为best的info*/
       std::swap( tempCS, bestCS );//直接就交换 tempCS 和 bestCS 了？
       // store temp best CI for next CU coding
       m_CurrCtx->best = m_CABACEstimator->getCtx();

@@ -421,7 +421,7 @@ void CABACWriter::coding_tree(const CodingStructure& cs, Partitioner& partitione
       pCuCtxChroma->isChromaQpAdjCoded = false;
     }
   }
-
+  
   const PartSplit splitMode = CU::getSplitAtDepth( cu, partitioner.currDepth );
 
   split_cu_mode( splitMode, cs, partitioner );
@@ -485,36 +485,36 @@ void CABACWriter::coding_tree(const CodingStructure& cs, Partitioner& partitione
         {
           partitioner.treeType = chromaNotSplit ? TREE_L : TREE_D;
         }
-      partitioner.splitCurrArea( splitMode, cs );
+        partitioner.splitCurrArea( splitMode, cs );
 
-      do
-      {
-        if( cs.picture->blocks[partitioner.chType].contains( partitioner.currArea().blocks[partitioner.chType].pos() ) )
+        do
         {
-          coding_tree( cs, partitioner, cuCtx );
-        }
-      } while( partitioner.nextPart( cs ) );
+          if( cs.picture->blocks[partitioner.chType].contains( partitioner.currArea().blocks[partitioner.chType].pos() ) )
+          {
+            coding_tree( cs, partitioner, cuCtx );
+          }
+        } while( partitioner.nextPart( cs ) );
 
-      partitioner.exitCurrSplit();
-      if( chromaNotSplit )
-      {
-        if (isChromaEnabled(cs.pcv->chrFormat))
+        partitioner.exitCurrSplit();
+        if( chromaNotSplit )
         {
-        CHECK( partitioner.chType != CHANNEL_TYPE_LUMA, "must be luma status" );
-        partitioner.chType = CHANNEL_TYPE_CHROMA;
-        partitioner.treeType = TREE_C;
+          if (isChromaEnabled(cs.pcv->chrFormat))
+          {
+          CHECK( partitioner.chType != CHANNEL_TYPE_LUMA, "must be luma status" );
+          partitioner.chType = CHANNEL_TYPE_CHROMA;
+          partitioner.treeType = TREE_C;
 
-        if( cs.picture->blocks[partitioner.chType].contains( partitioner.currArea().blocks[partitioner.chType].pos() ) )
-        {
-          coding_tree( cs, partitioner, cuCtx );
-        }
-        }
+          if( cs.picture->blocks[partitioner.chType].contains( partitioner.currArea().blocks[partitioner.chType].pos() ) )
+          {
+            coding_tree( cs, partitioner, cuCtx );
+          }
+          }
 
-        //recover
-        partitioner.chType = CHANNEL_TYPE_LUMA;
-        partitioner.treeType = TREE_D;
-      }
-      partitioner.modeType = modeTypeParent;
+          //recover
+          partitioner.chType = CHANNEL_TYPE_LUMA;
+          partitioner.treeType = TREE_D;
+        }
+        partitioner.modeType = modeTypeParent;
       }
       return;
   }

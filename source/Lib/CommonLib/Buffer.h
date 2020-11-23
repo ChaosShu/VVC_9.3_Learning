@@ -608,7 +608,9 @@ void AreaBuf<T>::padBorderPel( unsigned marginX, unsigned marginY, int dir )
     }
   }
 }
-
+/**
+* copy-style padding 
+*/
 template<typename T>
 void AreaBuf<T>::extendBorderPel( unsigned margin )
 {

@@ -216,7 +216,7 @@ void EncModeCtrl::ccUpdateTMbyEntropy(double entropy)
 {
   int Aqp = m_ComprCUCtxList.back().testModes.back().qp;
   auto xxx = m_ComprCUCtxList.back().testModes;             //xxx.size() <=2 说明只有INTRA + Dummy MODE 或者只有QT
-  if (entropy - 5.0 > 0.01)
+  /*if (entropy - 5.0 > 0.01)
   {
     if (xxx.back().type == ETM_INTRA && xxx.size() > 2)
     {
@@ -224,8 +224,8 @@ void EncModeCtrl::ccUpdateTMbyEntropy(double entropy)
       std::swap(m_ComprCUCtxList.back().testModes[xxx.size() - 3], m_ComprCUCtxList.back().testModes[xxx.size() - 2]);
       m_ComprCUCtxList.back().testModes.insert(m_ComprCUCtxList.back().testModes.begin(),{ ETM_INTRA,ETO_STANDARD,Aqp });
     }
-  }
-  else if (entropy - 1.5 < 0.01 && xxx.size() > 2)
+  }*/
+  if (entropy - 1.2 < 0.01 && xxx.size() > 2)
   {
     if (m_ComprCUCtxList.back().testModes.back().type == ETM_INTRA)
     {
