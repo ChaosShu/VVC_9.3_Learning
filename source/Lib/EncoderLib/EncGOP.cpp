@@ -2771,7 +2771,10 @@ void EncGOP::compressGOP( int iPOCLast, int iNumPicRcvd, PicList& rcListPic,
         }
 
         m_pcSliceEncoder->precompressSlice( pcPic );
-        m_pcSliceEncoder->compressSlice   ( pcPic, false, false );
+
+        EncCu::roundFlag = true;/*Chaos : bugFix*/
+        m_pcSliceEncoder->compressSlice(pcPic, false, false);
+        EncCu::roundFlag = false;/*Chaos : bugFix*/ 
 
         if(sliceIdx < pcPic->cs->pps->getNumSlicesInPic() - 1)
         {

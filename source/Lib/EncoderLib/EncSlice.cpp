@@ -1853,7 +1853,7 @@ void EncSlice::encodeSlice   ( Picture* pcPic, OutputBitstream* pcSubstreams, ui
       resetBcwCodingOrder(false, cs);
     }
 
-    m_CABACWriter->coding_tree_unit( cs, ctuArea, pcPic->m_prevQP, ctuRsAddr );//递归(Recursion)入口，CTU级
+    m_CABACWriter->coding_tree_unit( cs, ctuArea, pcPic->m_prevQP, ctuRsAddr );//编码入口，CTU级
 
     // store probabilities of first CTU in line into buffer
     if( cs.pps->ctuIsTileColBd( ctuXPosInCtus ) && wavefrontsEnabled )

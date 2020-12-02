@@ -226,7 +226,6 @@ void CABACWriter::coding_tree_unit( CodingStructure& cs, const UnitArea& area, i
       qps[CH_C] = cuCtxChroma.qp;
     }
   }
-  EncCu::roundFlag = false;
 }
 
 

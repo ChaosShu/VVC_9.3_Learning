@@ -85,7 +85,7 @@ static void printMacroSettings()
 // ====================================================================================================================
 
 std::string EncCu::ccCsvFile = "";/*我Chaos当场裂开了呀:静态类成员变量：要先定义才能去用*/
-bool EncCu::roundFlag = true;
+bool EncCu::roundFlag = false;
 int main(int argc, char* argv[])
 {
   // print information
