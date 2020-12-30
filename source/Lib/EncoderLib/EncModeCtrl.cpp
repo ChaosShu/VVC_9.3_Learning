@@ -245,46 +245,46 @@ void EncModeCtrl::ccUpdateTMbyGradient(double gradient, int qp)
   switch (qp)
   {
   case 37: {
-      if (EncModeCtrl::ccVideoName == bqt)
+      if (EncModeCtrl::ccVideoName == bbd)
       {
-          UpTH = 52.2;
+          UpTH = 27.08;
       }
-      else if (EncModeCtrl::ccVideoName == bbd)
+      else if (EncModeCtrl::ccVideoName == bqt)
       {
-          UpTH = 26.7;
+          UpTH = 51.15;
       }
       break;
   }
   case 32: {
-      if (EncModeCtrl::ccVideoName == bqt)
+      if (EncModeCtrl::ccVideoName == bbd)
       {
-          UpTH = 47.4;
+          UpTH = 27.08;
       }
-      else if (EncModeCtrl::ccVideoName == bbd)
+      else if (EncModeCtrl::ccVideoName == bqt)
       {
-          UpTH = 25.2;
+          UpTH = 48.89;
       }
       break;
   }
   case 27: {
-      if (EncModeCtrl::ccVideoName == bqt)
+      if (EncModeCtrl::ccVideoName == bbd)
       {
-          UpTH = 42.2;
+          UpTH = 21.49;
       }
-      else if (EncModeCtrl::ccVideoName == bbd)
+      else if (EncModeCtrl::ccVideoName == bqt)
       {
-          UpTH = 17.4;
+          UpTH = 49.84;
       }
       break;
   }
   case 22: {
-      if (EncModeCtrl::ccVideoName == bqt)
+      if (EncModeCtrl::ccVideoName == bbd)
       {
-          UpTH = 42.0;
+          UpTH = 15.05;
       }
-      else if (EncModeCtrl::ccVideoName == bbd)
+      else if (EncModeCtrl::ccVideoName == bqt)
       {
-          UpTH = 11.5;
+          UpTH = 17.85;
       }
       break;
   }
@@ -292,6 +292,11 @@ void EncModeCtrl::ccUpdateTMbyGradient(double gradient, int qp)
   }
   if (gradient - UpTH >= 0.001)
   {
+    EncModeCtrl::ccjumpedCU64++; cout << ccjumpedCU64 << ' ';
+    if (! (ccjumpedCU64 % 5) )
+    {
+      cout << endl;
+    }
       m_ComprCUCtxList.back().testModes.clear();
       m_ComprCUCtxList.back().testModes.push_back({ { ETM_POST_DONT_SPLIT } });
       m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_QT,ETO_STANDARD,Aqp });

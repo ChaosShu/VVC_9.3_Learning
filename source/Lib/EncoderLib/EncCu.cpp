@@ -374,6 +374,10 @@ void EncCu::ccEarlyConsTestMode(CodingStructure*& tempCS, Partitioner& partition
 
   SizeType w = curArea.lwidth();
   SizeType h = curArea.lheight();
+  if (partitioner.getImplicitSplit(*tempCS) != CU_DONT_SPLIT)//边界不参与跳过
+  {
+    return;
+  }
 
   if (w == 64 && h == 64)
   {
