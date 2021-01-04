@@ -216,6 +216,8 @@ private:
 #endif
   double                m_sbtCostSave[2];
 public:
+  static std::clock_t ccIntraT;
+
   /// copy parameters from encoder class
   void  init                ( EncLib* pcEncLib, const SPS& sps PARL_PARAM( const int jId = 0 ) );
 
