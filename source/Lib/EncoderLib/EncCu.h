@@ -150,6 +150,8 @@ class EncCu
   : DecCu
 {
 private:
+  static int ccIntraT;
+
   bool m_bestModeUpdated;
   struct CtxPair
   {

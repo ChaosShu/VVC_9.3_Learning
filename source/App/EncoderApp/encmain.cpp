@@ -234,7 +234,7 @@ int main(int argc, char* argv[])
   // call encoding function per layer
   bool eos = false;
   /*unsigned short GOP_cnt{ 0 };///@UpdatedBy:Chaos */
-  
+  EncCu::ccIntraT = 0;
   while( !eos )
   { //while每执行一次，代表已编码完一整个GOP
     //// read GOP
