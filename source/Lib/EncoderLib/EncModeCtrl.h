@@ -294,6 +294,7 @@ protected:
   bool                  m_doPlt;
 
 public:
+  static long ccIntraT;
 
   virtual ~EncModeCtrl              () {}
 

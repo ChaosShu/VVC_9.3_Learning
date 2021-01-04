@@ -1949,7 +1949,7 @@ bool EncCu::xCheckRDCostIntra(CodingStructure *&tempCS, CodingStructure *&bestCS
     auto endT = std::clock();
     auto usedT = endT - begT;
     cout << "Current CS Used Time:  " << usedT << endl;
-    EncCu::ccIntraT += endT - begT;
+    EncModeCtrl::ccIntraT += endT - begT;
   }
   return foundZeroRootCbf;
 }
