@@ -80,6 +80,7 @@ static void printMacroSettings()
 // ====================================================================================================================
 // Main function
 // ====================================================================================================================
+double EncModeCtrl::ccIntraT = 0;
 
 int main(int argc, char* argv[])
 {
@@ -339,6 +340,7 @@ int main(int argc, char* argv[])
   printf(" Total Time: %12.3f sec. [user] %12.3f sec. [elapsed]\n",
          (endClock - startClock) * 1.0 / CLOCKS_PER_SEC,
          encTime / 1000.0);
+  cout << endl << "Intra-occupied Time: " << EncModeCtrl::ccIntraT << endl;
 #endif
 
   return 0;

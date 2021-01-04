@@ -808,7 +808,17 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/ /*色度也
       }
       else
       {
+        clock_t endT{ 0 }, begT{ 0 };
+        if (tempCS->area.lwidth() != 64 && tempCS->area.lheight() != 64)
+        {
+          begT = std::clock();
+        }
         xCheckRDCostIntra(tempCS, bestCS, partitioner, currTestMode, false);
+        if (tempCS->area.lwidth() != 64 && tempCS->area.lheight() != 64)
+        {
+          endT = std::clock();
+          EncModeCtrl::ccIntraT += double(endT - begT) / CLOCKS_PER_SEC;
+        }
       }
     }
     else if (currTestMode.type == ETM_PALETTE)//调试版模式
@@ -1580,11 +1590,6 @@ void EncCu::xCheckModeSplit(CodingStructure *&tempCS, CodingStructure *&bestCS, 
 
 bool EncCu::xCheckRDCostIntra(CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &partitioner, const EncTestMode& encTestMode, bool adaptiveColorTrans)
 {
-  clock_t endT{ 0 }, begT{ 0 };
-  if (tempCS->area.lwidth() == 64 && tempCS->area.lheight() == 64)
-  {
-    auto begT = std::clock();
-  }
   double          bestInterCost             = m_modeCtrl->getBestInterCost();
   double          costSize2Nx2NmtsFirstPass = m_modeCtrl->getMtsSize2Nx2NFirstPassCost();
   bool            skipSecondMtsPass         = m_modeCtrl->getSkipSecondMTSPass();
@@ -1944,13 +1949,6 @@ bool EncCu::xCheckRDCostIntra(CodingStructure *&tempCS, CodingStructure *&bestCS
   } //trGrpIdx
   if(!adaptiveColorTrans)
   m_modeCtrl->setBestNonDCT2Cost(bestNonDCT2Cost);
-  if (tempCS->area.lwidth() == 64 && tempCS->area.lheight() == 64)
-  {
-    auto endT = std::clock();
-    auto usedT = endT - begT;
-    cout << "Current CS Used Time:  " << usedT << endl;
-    EncModeCtrl::ccIntraT += endT - begT;
-  }
   return foundZeroRootCbf;
 }
 
