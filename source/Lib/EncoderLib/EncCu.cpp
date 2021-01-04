@@ -218,153 +218,153 @@ EncCu::~EncCu()
 /*    Algorithm of early Termination CHAOSffffff  CHaos*/
 //std::string ccCsvFile;
 
-bool EncCu::ccGetSplitFlag(CodingStructure*& tempCS, Partitioner& partitioner, bool& mtSplitFlag, bool& qtSplitFlag, double& adjDepth) const{
-  Slice& slice = *tempCS->slice;
+//bool EncCu::ccGetSplitFlag(CodingStructure*& tempCS, Partitioner& partitioner, bool& mtSplitFlag, bool& qtSplitFlag, double& adjDepth) const{
+//  Slice& slice = *tempCS->slice;
+//
+//  CodingUnit cu(tempCS->area);
+//  cu.cs = tempCS;
+//  cu.predMode = MODE_INTER;
+//  cu.slice = tempCS->slice;
+//
+//  PredictionUnit pu(tempCS->area);
+//  pu.cu = &cu;
+//  pu.cs = tempCS;
+//
+//  uint8_t currDepth = partitioner.currDepth, currQTDepth = partitioner.currQTDepth, currMTDepth = partitioner.currMTDepth;
+//  int cnt{ 0 }, sumAdjDepth{ 0 };
+//
+//  Position posLT = pu.Y().topLeft();
+//  Position posRT = pu.Y().topRight();
+//  Position posLB = pu.Y().bottomLeft();
+//  CodingUnit* adjCU;
+//
+//  /*  check left PU  */
+//  if (tempCS->getPURestricted(posLB.offset(-1, 0), pu, pu.chType))
+//  {
+//    adjCU = tempCS->getPURestricted(posLB.offset(-1, 0), pu, pu.chType)->cu;
+//
+//    mtSplitFlag |= adjCU->mtDepth > currMTDepth ? 1 : 0;//周围的MT划分比当前深，则mtSplitFlag++
+//    qtSplitFlag |= adjCU->qtDepth > currQTDepth ? 1 : 0;//周围的QT划分比当前深，则mtSplitFlag++
+//
+//    cnt++;//周围可用的CU数++
+//    sumAdjDepth += adjCU->depth;//周围深度和++
+//  }
+//  /*  check above PU  */
+//  if (tempCS->getPURestricted(posRT.offset(0, -1), pu, pu.chType))
+//  {
+//    adjCU = tempCS->getPURestricted(posRT.offset(0, -1), pu, pu.chType)->cu;
+//
+//    mtSplitFlag |= adjCU->mtDepth > currMTDepth ? 1 : 0;
+//    qtSplitFlag |= adjCU->qtDepth > currQTDepth ? 1 : 0;
+//
+//    cnt++;
+//    sumAdjDepth += adjCU->depth;
+//  }
+//  /*  check left bottom PU  */
+//  if (tempCS->getPURestricted(posLB.offset(-1, 1), pu, pu.chType))
+//  {
+//    adjCU = tempCS->getPURestricted(posLB.offset(-1, 1), pu, pu.chType)->cu;
+//
+//    mtSplitFlag |= adjCU->mtDepth > currMTDepth ? 1 : 0;
+//    qtSplitFlag |= adjCU->qtDepth > currQTDepth ? 1 : 0;
+//
+//    cnt++;
+//    sumAdjDepth += adjCU->depth;
+//  }
+//  /*  check left above PU  */
+//  if (tempCS->getPURestricted(posLT.offset(-1, -1), pu, pu.chType))
+//  {
+//    adjCU = tempCS->getPURestricted(posLT.offset(-1, -1), pu, pu.chType)->cu;
+//
+//    mtSplitFlag |= adjCU->mtDepth > currMTDepth ? 1 : 0;
+//    qtSplitFlag |= adjCU->qtDepth > currQTDepth ? 1 : 0;
+//
+//    cnt++;
+//    sumAdjDepth += adjCU->depth;
+//  }
+//  /*  check right above PU  */
+//  if (tempCS->getPURestricted(posRT.offset(1, -1), pu, pu.chType))
+//  {
+//    adjCU = tempCS->getPURestricted(posRT.offset(1, -1), pu, pu.chType)->cu;
+//
+//    mtSplitFlag |= adjCU->mtDepth > currMTDepth ? 1 : 0;
+//    qtSplitFlag |= adjCU->qtDepth > currQTDepth ? 1 : 0;
+//    
+//    cnt++;
+//    sumAdjDepth += adjCU->depth;
+//  }
+//
+//  adjDepth = (cnt == 0) ? adjDepth : ((double)sumAdjDepth / cnt);
+//  return cnt < 3 ? false : true;
+//}
 
-  CodingUnit cu(tempCS->area);
-  cu.cs = tempCS;
-  cu.predMode = MODE_INTER;
-  cu.slice = tempCS->slice;
+//void EncCu::ccSetSplitType(const EncTestMode &encTestMode, int &ccSplitType)
+//{
+//  switch (encTestMode.type)
+//  {
+//  case ETM_SPLIT_QT:ccSplitType = 0; break;
+//  case ETM_SPLIT_BT_H:ccSplitType = 1; break;
+//  case ETM_SPLIT_BT_V:ccSplitType = 2; break;
+//  case ETM_SPLIT_TT_H:ccSplitType = 3; break;
+//  case ETM_SPLIT_TT_V:ccSplitType = 4; break;
+//  case ETM_INTRA:ccSplitType = 5; break;
+//  default:
+//    cerr << "SplitType illegal!!!!" << endl;
+//  }
+//}
 
-  PredictionUnit pu(tempCS->area);
-  pu.cu = &cu;
-  pu.cs = tempCS;
+//void EncCu::ccExtractFt(CodingStructure* bestCS, Partitioner& partitioner, string filename) {
+//  //int selectedSplit = bestCS->ccBestSplit;//result
+//  auto x0 = bestCS->area.Y().x;
+//  auto y0 = bestCS->area.Y().y;
+//  auto width = bestCS->area.Y().width;
+//  auto height = bestCS->area.Y().height;
+//  int totalPixel = width * height;
+//
+//  const int currQTDepth = partitioner.currQTDepth;      //x1
+//  const int currMTDepth = partitioner.currMTDepth;      //x2
+//
+//  //const UnitArea currArea = clipArea(CS::getArea(*bestCS, bestCS->area, partitioner.chType), *bestCS->picture);
+//  //const CPelBuf picOri = bestCS->getOrgBuf(currArea).Y();
+//
+//  int xxxpoc = bestCS->slice->getPOC() << 3;
+//  ofstream mTraceF;
+//  mTraceF.open(filename, ios::app);
+//  mTraceF << xxxpoc << ',' << x0 << ',' << y0 << ',' << width << ',' << height << ',' /*<< bestCS->ccBestSplit << ','*/ 
+//    << totalPixel << ','<< currQTDepth << ',' << currMTDepth << endl;
+//  mTraceF.close();
+//
+//}
 
-  uint8_t currDepth = partitioner.currDepth, currQTDepth = partitioner.currQTDepth, currMTDepth = partitioner.currMTDepth;
-  int cnt{ 0 }, sumAdjDepth{ 0 };
-
-  Position posLT = pu.Y().topLeft();
-  Position posRT = pu.Y().topRight();
-  Position posLB = pu.Y().bottomLeft();
-  CodingUnit* adjCU;
-
-  /*  check left PU  */
-  if (tempCS->getPURestricted(posLB.offset(-1, 0), pu, pu.chType))
-  {
-    adjCU = tempCS->getPURestricted(posLB.offset(-1, 0), pu, pu.chType)->cu;
-
-    mtSplitFlag |= adjCU->mtDepth > currMTDepth ? 1 : 0;//周围的MT划分比当前深，则mtSplitFlag++
-    qtSplitFlag |= adjCU->qtDepth > currQTDepth ? 1 : 0;//周围的QT划分比当前深，则mtSplitFlag++
-
-    cnt++;//周围可用的CU数++
-    sumAdjDepth += adjCU->depth;//周围深度和++
-  }
-  /*  check above PU  */
-  if (tempCS->getPURestricted(posRT.offset(0, -1), pu, pu.chType))
-  {
-    adjCU = tempCS->getPURestricted(posRT.offset(0, -1), pu, pu.chType)->cu;
-
-    mtSplitFlag |= adjCU->mtDepth > currMTDepth ? 1 : 0;
-    qtSplitFlag |= adjCU->qtDepth > currQTDepth ? 1 : 0;
-
-    cnt++;
-    sumAdjDepth += adjCU->depth;
-  }
-  /*  check left bottom PU  */
-  if (tempCS->getPURestricted(posLB.offset(-1, 1), pu, pu.chType))
-  {
-    adjCU = tempCS->getPURestricted(posLB.offset(-1, 1), pu, pu.chType)->cu;
-
-    mtSplitFlag |= adjCU->mtDepth > currMTDepth ? 1 : 0;
-    qtSplitFlag |= adjCU->qtDepth > currQTDepth ? 1 : 0;
-
-    cnt++;
-    sumAdjDepth += adjCU->depth;
-  }
-  /*  check left above PU  */
-  if (tempCS->getPURestricted(posLT.offset(-1, -1), pu, pu.chType))
-  {
-    adjCU = tempCS->getPURestricted(posLT.offset(-1, -1), pu, pu.chType)->cu;
-
-    mtSplitFlag |= adjCU->mtDepth > currMTDepth ? 1 : 0;
-    qtSplitFlag |= adjCU->qtDepth > currQTDepth ? 1 : 0;
-
-    cnt++;
-    sumAdjDepth += adjCU->depth;
-  }
-  /*  check right above PU  */
-  if (tempCS->getPURestricted(posRT.offset(1, -1), pu, pu.chType))
-  {
-    adjCU = tempCS->getPURestricted(posRT.offset(1, -1), pu, pu.chType)->cu;
-
-    mtSplitFlag |= adjCU->mtDepth > currMTDepth ? 1 : 0;
-    qtSplitFlag |= adjCU->qtDepth > currQTDepth ? 1 : 0;
-    
-    cnt++;
-    sumAdjDepth += adjCU->depth;
-  }
-
-  adjDepth = (cnt == 0) ? adjDepth : ((double)sumAdjDepth / cnt);
-  return cnt < 3 ? false : true;
-}
-
-void EncCu::ccSetSplitType(const EncTestMode &encTestMode, int &ccSplitType)
-{
-  switch (encTestMode.type)
-  {
-  case ETM_SPLIT_QT:ccSplitType = 0; break;
-  case ETM_SPLIT_BT_H:ccSplitType = 1; break;
-  case ETM_SPLIT_BT_V:ccSplitType = 2; break;
-  case ETM_SPLIT_TT_H:ccSplitType = 3; break;
-  case ETM_SPLIT_TT_V:ccSplitType = 4; break;
-  case ETM_INTRA:ccSplitType = 5; break;
-  default:
-    cerr << "SplitType illegal!!!!" << endl;
-  }
-}
-
-void EncCu::ccExtractFt(CodingStructure* bestCS, Partitioner& partitioner, string filename) {
-  //int selectedSplit = bestCS->ccBestSplit;//result
-  auto x0 = bestCS->area.Y().x;
-  auto y0 = bestCS->area.Y().y;
-  auto width = bestCS->area.Y().width;
-  auto height = bestCS->area.Y().height;
-  int totalPixel = width * height;
-
-  const int currQTDepth = partitioner.currQTDepth;      //x1
-  const int currMTDepth = partitioner.currMTDepth;      //x2
-
-  //const UnitArea currArea = clipArea(CS::getArea(*bestCS, bestCS->area, partitioner.chType), *bestCS->picture);
-  //const CPelBuf picOri = bestCS->getOrgBuf(currArea).Y();
-
-  int xxxpoc = bestCS->slice->getPOC() << 3;
-  ofstream mTraceF;
-  mTraceF.open(filename, ios::app);
-  mTraceF << xxxpoc << ',' << x0 << ',' << y0 << ',' << width << ',' << height << ',' /*<< bestCS->ccBestSplit << ','*/ 
-    << totalPixel << ','<< currQTDepth << ',' << currMTDepth << endl;
-  mTraceF.close();
-
-}
-
-double EncCu::ccCaculEntropy(CodingStructure *&tempCS)
-{
-  auto CurrUnit = clipArea(CS::getArea(*tempCS, tempCS->area, CHANNEL_TYPE_LUMA ), *tempCS->picture);
-  int w = CurrUnit.lwidth();
-  int h = CurrUnit.lheight();
-  PelBuf picOri = tempCS->getOrgBuf(CurrUnit.Y());
-  Pel freqTbl[256]{ 0 };
-
-  for (int i = 0; i < w; i++)
-  {
-    for (int j = 0; j < h; j++)
-    {
-      freqTbl[picOri.at(i, j)]++;
-    }
-  }
-  double Entropy{ 0 }, temp{ 0 };
-  int pixNums{ w * h };
-  for (int i = 0; i < 256; i++)
-  {
-    temp = freqTbl[i];
-    if ( temp )
-    {
-      temp = temp / pixNums;    //概率
-      temp = -temp * log2(temp);//熵
-    }
-    Entropy += temp;
-  }
-  return Entropy;
-}
+//double EncCu::ccCaculEntropy(CodingStructure *&tempCS)
+//{
+//  auto CurrUnit = clipArea(CS::getArea(*tempCS, tempCS->area, CHANNEL_TYPE_LUMA ), *tempCS->picture);
+//  int w = CurrUnit.lwidth();
+//  int h = CurrUnit.lheight();
+//  PelBuf picOri = tempCS->getOrgBuf(CurrUnit.Y());
+//  Pel freqTbl[256]{ 0 };
+//
+//  for (int i = 0; i < w; i++)
+//  {
+//    for (int j = 0; j < h; j++)
+//    {
+//      freqTbl[picOri.at(i, j)]++;
+//    }
+//  }
+//  double Entropy{ 0 }, temp{ 0 };
+//  int pixNums{ w * h };
+//  for (int i = 0; i < 256; i++)
+//  {
+//    temp = freqTbl[i];
+//    if ( temp )
+//    {
+//      temp = temp / pixNums;    //概率
+//      temp = -temp * log2(temp);//熵
+//    }
+//    Entropy += temp;
+//  }
+//  return Entropy;
+//}
 
 void EncCu::ccEarlyConsTestMode(CodingStructure*& tempCS, Partitioner& partitioner)
 {
