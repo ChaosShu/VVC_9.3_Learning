@@ -366,6 +366,26 @@ EncCu::~EncCu()
 //  return Entropy;
 //}
 
+int EncCu::ccCaculGradient(const PelBuf & picOri)
+{
+  auto w = picOri.width;
+  auto h = picOri.height;
+  int tempGradV{ 0 }, tempGradH{ 0 }, sumGrad{ 0 };
+  for (auto i = 1; i < w - 1; i++)
+  {
+    for (auto j = 1; j < h - 1; j++)
+    {
+      tempGradV = abs(picOri.at(i - 1, j + 1) + 2 * picOri.at(i, j + 1) + picOri.at(i + 1, j + 1)
+        - (picOri.at(i - 1, j - 1) + 2 * picOri.at(i, j - 1) + picOri.at(i + 1, j - 1)));
+      tempGradH = abs(picOri.at(i + 1, j - 1) + 2 * picOri.at(i + 1, j) + picOri.at(i + 1, j + 1)
+        - (picOri.at(i - 1, j - 1) + 2 * picOri.at(i - 1, j) + picOri.at(i - 1, j + 1)));
+      sumGrad += tempGradH + tempGradV;
+    }
+  }
+  auto avgGrad = sumGrad / (w * h);
+  return avgGrad;
+}
+
 void EncCu::ccEarlyConsTestMode(CodingStructure*& tempCS, Partitioner& partitioner)
 {
   auto* currTestMode = &(m_modeCtrl->getComprCUCtx().testModes);
@@ -384,20 +404,9 @@ void EncCu::ccEarlyConsTestMode(CodingStructure*& tempCS, Partitioner& partition
     //cout << (partitioner.getImplicitSplit(*tempCS) != CU_DONT_SPLIT) << endl;
     //PelBuf picOri = tempCS->getOrgBuf(curArea).Y();
     /*cout << tempCS->area[0].x << "," << tempCS->area[0].y << endl;*/
-    auto picOri = tempCS->picture->getTrueOrigBuf(curArea.Y());
-    int tempGradV{ 0 }, tempGradH{ 0 }, sumGrad{ 0 };
-    for (auto i = 1; i < w - 1; i++)
-    {
-      for (auto j = 1; j < h - 1; j++)
-      {
-        tempGradV = abs(picOri.at(i - 1, j + 1) + 2 * picOri.at(i, j + 1) + picOri.at(i + 1, j + 1)
-          - (picOri.at(i - 1, j - 1) + 2 * picOri.at(i, j - 1) + picOri.at(i + 1, j - 1)));
-        tempGradH = abs(picOri.at(i + 1, j - 1) + 2 * picOri.at(i + 1, j) + picOri.at(i + 1, j + 1)
-          - (picOri.at(i - 1, j - 1) + 2 * picOri.at(i - 1, j) + picOri.at(i - 1, j + 1)));
-        sumGrad += tempGradH + tempGradV;
-      }
-    }
-    double avgGrad = (double)sumGrad / (w * h);
+
+    auto avgGrad = ccCaculGradient(tempCS->picture->getTrueOrigBuf(curArea.Y()));
+    
     m_modeCtrl->ccUpdateTMbyGradient(avgGrad, tempCS->baseQP);
   }
   /*

@@ -235,7 +235,7 @@ public:
   //static std::string ccVideoName;
   
   void ccExtractFt(CodingStructure* bestCS, Partitioner& partitioner, string filename);
-  double ccCaculEntropy(CodingStructure*& tempCS);
+  int ccCaculGradient(const PelBuf & TrueOriPic);
   /******************/
 
   void   setMergeBestSATDCost(double cost) { m_mergeBestSATDCost = cost; }
