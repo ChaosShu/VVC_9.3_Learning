@@ -366,24 +366,52 @@ EncCu::~EncCu()
 //  return Entropy;
 //}
 
-int EncCu::ccCaculGradient(const PelBuf & picOri)
+//int EncCu::ccCaculGradient(const PelBuf & picOri)
+//{
+//  auto w = picOri.width;
+//  auto h = picOri.height;
+//  int tempGradV{ 0 }, tempGradH{ 0 }, sumGrad{ 0 };
+//  for (auto i = 1; i < w - 1; i++)
+//  {
+//    for (auto j = 1; j < h - 1; j++)
+//    {
+//      tempGradV = abs(picOri.at(i - 1, j + 1) + 2 * picOri.at(i, j + 1) + picOri.at(i + 1, j + 1)
+//        - (picOri.at(i - 1, j - 1) + 2 * picOri.at(i, j - 1) + picOri.at(i + 1, j - 1)));
+//      tempGradH = abs(picOri.at(i + 1, j - 1) + 2 * picOri.at(i + 1, j) + picOri.at(i + 1, j + 1)
+//        - (picOri.at(i - 1, j - 1) + 2 * picOri.at(i - 1, j) + picOri.at(i - 1, j + 1)));
+//      sumGrad += tempGradH + tempGradV;
+//    }
+//  }
+//  auto avgGrad = sumGrad / (w * h);
+//  return avgGrad;
+//}
+
+double EncCu::ccCaculEntropy(const PelBuf& picOri)
 {
   auto w = picOri.width;
   auto h = picOri.height;
-  int tempGradV{ 0 }, tempGradH{ 0 }, sumGrad{ 0 };
-  for (auto i = 1; i < w - 1; i++)
+  Pel freqTbl[256]{ 0 };
+
+  for (int i = 0; i < w; i++)
   {
-    for (auto j = 1; j < h - 1; j++)
+    for (int j = 0; j < h; j++)
     {
-      tempGradV = abs(picOri.at(i - 1, j + 1) + 2 * picOri.at(i, j + 1) + picOri.at(i + 1, j + 1)
-        - (picOri.at(i - 1, j - 1) + 2 * picOri.at(i, j - 1) + picOri.at(i + 1, j - 1)));
-      tempGradH = abs(picOri.at(i + 1, j - 1) + 2 * picOri.at(i + 1, j) + picOri.at(i + 1, j + 1)
-        - (picOri.at(i - 1, j - 1) + 2 * picOri.at(i - 1, j) + picOri.at(i - 1, j + 1)));
-      sumGrad += tempGradH + tempGradV;
+      freqTbl[picOri.at(i, j)]++;
     }
   }
-  auto avgGrad = sumGrad / (w * h);
-  return avgGrad;
+  double Entropy{ 0 }, temp{ 0 };
+  SizeType pixNums{ w * h };
+  for (int i = 0; i < 256; i++)
+  {
+    temp = freqTbl[i];
+    if ( temp )
+    {
+      temp /= pixNums;    //¸ÅÂÊ
+      temp *= -log2(temp);//ìØ
+    }
+    Entropy += temp;
+  }
+  return Entropy;
 }
 
 void EncCu::ccEarlyConsTestMode(CodingStructure*& tempCS, Partitioner& partitioner)
@@ -401,9 +429,9 @@ void EncCu::ccEarlyConsTestMode(CodingStructure*& tempCS, Partitioner& partition
     //PelBuf picOri = tempCS->getOrgBuf(curArea).Y();
     /*cout << tempCS->area[0].x << "," << tempCS->area[0].y << endl;*/
 
-    auto avgGrad = ccCaculGradient(tempCS->picture->getTrueOrigBuf(curArea.Y()));
+    auto avgEntro = ccCaculEntropy(tempCS->picture->getTrueOrigBuf(curArea.Y()));
     
-    m_modeCtrl->ccUpdateTMbyGradient(avgGrad, tempCS->baseQP);
+    m_modeCtrl->ccUpdateTMbyEntropy(avgEntro, tempCS->baseQP);
   }
   /*
 

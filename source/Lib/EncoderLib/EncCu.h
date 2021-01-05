@@ -235,7 +235,7 @@ public:
   //static std::string ccVideoName;
   
   void ccExtractFt(CodingStructure* bestCS, Partitioner& partitioner, string filename);
-  int ccCaculGradient(const PelBuf & TrueOriPic);
+  //int ccCaculGradient(const PelBuf & TrueOriPic);
   double ccCaculEntropy(const PelBuf& TrueOriPic);
   /******************/
 

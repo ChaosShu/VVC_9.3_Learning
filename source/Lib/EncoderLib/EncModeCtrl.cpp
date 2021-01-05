@@ -1,4 +1,4 @@
-Ôªø/* The copyright in this software is being made available under the BSD
+/* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
@@ -82,9 +82,9 @@ void EncModeCtrl::setEarlySkipDetected()
   m_ComprCUCtxList.back().earlySkip = true;
 }
 
-//\function: ÊèêÂèñcsÁöÑdis, fracBits, cost;
-//\function: ÊèêÂèñencTestmodeÁöÑtypeÔºåopts;
-//Âπ∂Â∞ÜËøô‰∫õÁâπÂæÅÂ≠òÂÖ•cs.features
+//\function: Ã·»°csµƒdis, fracBits, cost;
+//\function: Ã·»°encTestmodeµƒtype£¨opts;
+//≤¢Ω´’‚–©Ãÿ’˜¥Ê»Îcs.features
 void EncModeCtrl::xExtractFeatures( const EncTestMode encTestmode, CodingStructure& cs )
 {
   CHECK( cs.features.size() < NUM_ENC_FEATURES, "Features vector is not initialized" );
@@ -101,11 +101,11 @@ bool EncModeCtrl::nextMode( const CodingStructure &cs, Partitioner &partitioner 
 {
   m_ComprCUCtxList.back().lastTestMode = m_ComprCUCtxList.back().testModes.back();
 
-  m_ComprCUCtxList.back().testModes.pop_back();//ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ«∞ÔøΩÔøΩÔøΩÔøΩƒ£ Ω
+  m_ComprCUCtxList.back().testModes.pop_back();//µØ≥ˆµ±«∞≤‚ ‘ƒ£ Ω
 
   while( !m_ComprCUCtxList.back().testModes.empty() && !tryModeMaster( currTestMode(), cs, partitioner ) )
   {
-    m_ComprCUCtxList.back().testModes.pop_back();//ÔøΩÔøΩ“ªÔøΩÔøΩ“™ÔøΩÔøΩÔøΩ‘µÔøΩƒ£ ΩÔøΩÔøΩÔøΩÔøΩÔøΩÀ£ÔøΩÔøΩÚµØ≥ÔøΩ
+    m_ComprCUCtxList.back().testModes.pop_back();//œ¬“ª∏ˆ“™≤‚ ‘µƒƒ£ Ω≤ª––¡À£¨‘ÚµØ≥ˆ
   }
 
   return !m_ComprCUCtxList.back().testModes.empty();
@@ -212,32 +212,8 @@ void EncModeCtrl::initLumaDeltaQpLUT()
 }
 
 /*Chaos*/
-//void EncModeCtrl::ccUpdateTMbyEntropy(double entropy)
-//{
-//  int Aqp = m_ComprCUCtxList.back().testModes.back().qp;
-//  auto xxx = m_ComprCUCtxList.back().testModes;             //xxx.size() <=2 ÀµÔøΩÔøΩ÷ªÔøΩÔøΩINTRA + Dummy MODE ÔøΩÔøΩÔøΩÔøΩ÷ªÔøΩÔøΩQT
-//  /*if (entropy - 5.0 > 0.01)
-//  {
-//    if (xxx.back().type == ETM_INTRA && xxx.size() > 2)
-//    {
-//      m_ComprCUCtxList.back().testModes.pop_back();
-//      std::swap(m_ComprCUCtxList.back().testModes[xxx.size() - 3], m_ComprCUCtxList.back().testModes[xxx.size() - 2]);
-//      m_ComprCUCtxList.back().testModes.insert(m_ComprCUCtxList.back().testModes.begin(),{ ETM_INTRA,ETO_STANDARD,Aqp });
-//    }
-//  }*/
-//  if (entropy - 1.2 < 0.01 && xxx.size() > 2)
-//  {
-//    if (m_ComprCUCtxList.back().testModes.back().type == ETM_INTRA)
-//    {
-//      m_ComprCUCtxList.back().testModes.clear();
-//      m_ComprCUCtxList.back().testModes.push_back({ ETM_INTRA,ETO_STANDARD,Aqp });
-//      m_ComprCUCtxList.back().testModes.push_back({ { ETM_POST_DONT_SPLIT } });
-//      m_ComprCUCtxList.back().testModes.push_back({ ETM_INTRA,ETO_STANDARD,Aqp });
-//    }
-//  }
-//}
 
-void EncModeCtrl::ccUpdateTMbyGradient(double gradient, int qp)
+void EncModeCtrl::ccUpdateTMbyEntropy(double entropy, int qp)
 {
   int Aqp = m_ComprCUCtxList.back().testModes.back().qp;
   string bqt{ "BQTerrace" }, bbd{ "BasketballDrive" };
@@ -245,52 +221,52 @@ void EncModeCtrl::ccUpdateTMbyGradient(double gradient, int qp)
   switch (qp)
   {
   case 37: {
-      if (EncModeCtrl::ccVideoName == bbd)
-      {
-          DownTH = 18.366;
-      }
-      else if (EncModeCtrl::ccVideoName == bqt)
-      {
-          DownTH = 27.724;
-      }
-      break;
+    if (EncModeCtrl::ccVideoName == bbd)
+    {
+      DownTH = 4.390946585;
+    }
+    else if (EncModeCtrl::ccVideoName == bqt)
+    {
+      DownTH = 4.231090508;
+    }
+    break;
   }
   case 32: {
-      if (EncModeCtrl::ccVideoName == bbd)
-      {
-          DownTH = 16.979;
-      }
-      else if (EncModeCtrl::ccVideoName == bqt)
-      {
-          DownTH = 23.675;
-      }
-      break;
+    if (EncModeCtrl::ccVideoName == bbd)
+    {
+      DownTH = 4.286757379;
+    }
+    else if (EncModeCtrl::ccVideoName == bqt)
+    {
+      DownTH = 4.126532274;
+    }
+    break;
   }
   case 27: {
-      if (EncModeCtrl::ccVideoName == bbd)
-      {
-          DownTH = 15.690;
-      }
-      else if (EncModeCtrl::ccVideoName == bqt)
-      {
-          DownTH = 22.046;
-      }
-      break;
+    if (EncModeCtrl::ccVideoName == bbd)
+    {
+      DownTH = 4.201509366;
+    }
+    else if (EncModeCtrl::ccVideoName == bqt)
+    {
+      DownTH = 4.090120857;
+    }
+    break;
   }
   case 22: {
-      if (EncModeCtrl::ccVideoName == bbd)
-      {
-        DownTH = -MAX_DOUBLE;
-      }
-      else if (EncModeCtrl::ccVideoName == bqt)
-      {
-          DownTH = 17.852;
-      }
-      break;
+    if (EncModeCtrl::ccVideoName == bbd)
+    {
+      DownTH = -MAX_DOUBLE;
+    }
+    else if (EncModeCtrl::ccVideoName == bqt)
+    {
+      DownTH = 3.926533147;
+    }
+    break;
   }
   default: std::cerr << "QP is invalid"; break;
   }
-  if (gradient <= DownTH - 0.001)
+  if (entropy <= DownTH - 0.0000000000000000001)
   {
     /*EncModeCtrl::ccjumpedCU64++; cout << ccjumpedCU64 << ' ';
     if (! (ccjumpedCU64 % 15) )
@@ -301,68 +277,31 @@ void EncModeCtrl::ccUpdateTMbyGradient(double gradient, int qp)
     {
       cout << '\t';
     }*/
-      m_ComprCUCtxList.back().testModes.clear();
-      m_ComprCUCtxList.back().testModes.push_back({ { ETM_POST_DONT_SPLIT } });
-      m_ComprCUCtxList.back().testModes.push_back({ ETM_INTRA,ETO_STANDARD,Aqp });
+    m_ComprCUCtxList.back().testModes.clear();
+    m_ComprCUCtxList.back().testModes.push_back({ { ETM_POST_DONT_SPLIT } });
+    m_ComprCUCtxList.back().testModes.push_back({ ETM_INTRA,ETO_STANDARD,Aqp });
   }
 }
 
 void EncModeCtrl::cccontrolValidTestMode(uint8_t &flowFlag, EncTestMode testMode, Partitioner& partitioner, CodingStructure& tempCS, CodingStructure& bestCS)
 {
-  if (!partitioner.canSplit(getPartSplit(testMode), tempCS))//ƒ£ ΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩVVCÔøΩƒªÔøΩÔøΩÔøΩ‘ºÔøΩÔøΩxxxxxxÔøΩÔøΩÔøΩÔøΩCUÔøΩÔøΩ“ªÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ,ÔøΩÔøΩ continueÔøΩÔøΩÔøΩÔøΩdo
+  if (!partitioner.canSplit(getPartSplit(testMode), tempCS))//ƒ£ Ω≤ª¬˙◊„VVCµƒªÆ∑÷‘º ¯xxxxxxÃ¯µΩCUœ¬“ª∏ˆªÆ∑÷,”√ continueºÃ–¯do
   {
     m_ComprCUCtxList.back().testModes.pop_back();
     flowFlag = 0;
   }
-  if ((m_ComprCUCtxList.back().testModes.front().type == ETM_INTRA) && (m_ComprCUCtxList.back().testModes.size() == 1))//÷°ÔøΩ⁄±ÔøΩÔøΩÔøΩ÷πÔøΩÔøΩÔøΩÔøΩÔøΩ
+  if ((m_ComprCUCtxList.back().testModes.front().type == ETM_INTRA) && (m_ComprCUCtxList.back().testModes.size() == 1))//÷°ƒ⁄±ªΩ˚÷πµƒ«Èøˆ
   {
-    if (!bestCS.cus.size()) {//ÔøΩÔøΩÔøΩÔøΩ÷°ÔøΩ⁄µÔøΩÔøΩÔøΩÔøΩÔøΩƒ£ ΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ(ÔøΩÔøΩbestCSÔøΩÔøΩcusÔøΩÔøΩ»ªÔøΩÔøΩƒ¨ÔøΩœµÔøΩ0),xxxxxxÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ«∞ÔøΩÔøΩÔøΩ÷£ÔøΩdo nothing
+    if (!bestCS.cus.size()) {//≥˝¡À÷°ƒ⁄µƒ∆‰À˚ƒ£ Ω∂º≤ªø…”√(º¥bestCSµƒcus»‘»ª «ƒ¨»œµƒ0),xxxxxxºÃ–¯µ±«∞ªÆ∑÷£¨do nothing
       flowFlag = 1;
     }
-    else//ÔøΩ—æÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ√µÔøΩƒ£ ΩÔøΩÔøΩ—°Œ™bestModexxxxxxÔøΩÔøΩÔøΩÔøΩCUÔøΩÔøΩÔøΩÔøΩ
+    else//“—æ≠”–∆‰À˚ø…”√µƒƒ£ Ω±ª—°Œ™bestModexxxxxxΩ· ¯CUªÆ∑÷
     {
       m_ComprCUCtxList.back().testModes.pop_back();
       flowFlag = 2;
     }
   }
 }
-
-//void EncModeCtrl::resetTMCandidate(bool* testModeFlag, int qp) {
-//  if (!testModeFlag[ETM_INTRA]) //÷°ÔøΩ⁄±ÔøΩÔøΩÔøΩÔøΩÔøΩ,ÔøΩ«øœ∂ÔøΩ ±“™ÔøΩ≈∏ÔøΩƒ£ ΩÔøΩÔøΩ»•ÔøΩƒ£ÔøΩÔøΩÔøΩÔøΩÔøΩÀµÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ“™ÔøΩÔøΩ“ªÔøΩÔøΩÔøΩÔøΩÔøΩ÷£ÔøΩbut why QT?
-//  {
-//    m_ComprCUCtxList.back().testModes.clear();
-//    m_ComprCUCtxList.back().testModes.push_back({ ETM_INTRA, ETO_STANDARD, qp });//in case of erro desicion
-//    m_ComprCUCtxList.back().testModes.push_back({ ETM_POST_DONT_SPLIT });//???
-//    m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_QT, ETO_STANDARD, qp });
-//  }
-//  else
-//  {
-//    m_ComprCUCtxList.back().testModes.clear();
-//    if (testModeFlag[ETM_SPLIT_QT])
-//    {
-//      m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_QT, ETO_STANDARD, qp });
-//    }
-//    if (testModeFlag[ETM_SPLIT_TT_V])
-//    {
-//      m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_TT_V, ETO_STANDARD, qp });
-//    }
-//    if (testModeFlag[ETM_SPLIT_TT_H])
-//    {
-//      m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_TT_H, ETO_STANDARD, qp });
-//    }
-//    if (testModeFlag[ETM_SPLIT_BT_V])
-//    {
-//      m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_BT_V, ETO_STANDARD, qp });
-//    }
-//    if (testModeFlag[ETM_SPLIT_BT_H])
-//    {
-//      m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_BT_H, ETO_STANDARD, qp });
-//    }
-//
-//    m_ComprCUCtxList.back().testModes.push_back({ ETM_POST_DONT_SPLIT });
-//    m_ComprCUCtxList.back().testModes.push_back({ ETM_INTRA, ETO_STANDARD, qp });
-//  }
-//}
 
 int EncModeCtrl::calculateLumaDQP( const CPelBuf& rcOrg )
 {
@@ -1278,7 +1217,7 @@ void EncModeCtrlMTnoRQT::initCTUEncoding( const Slice &slice )
   }
 }
 
-/*ÔøΩÔøΩ ºÔøΩÔøΩCUÔøΩÔøΩÔøΩÔøΩÔøΩœ¢*/
+/*≥ı ºªØCUœ‡πÿ–≈œ¢*/
 void EncModeCtrlMTnoRQT::initCULevel( Partitioner &partitioner, const CodingStructure& cs )
 {
   // Min/max depth
@@ -1293,7 +1232,7 @@ void EncModeCtrlMTnoRQT::initCULevel( Partitioner &partitioner, const CodingStru
     }
   }
 
-  m_ComprCUCtxList.push_back( ComprCUCtx( cs, minDepth, maxDepth, NUM_EXTRA_FEATURES ) );//push LCUÔøΩÔøΩÔøΩÔøΩ
+  m_ComprCUCtxList.push_back( ComprCUCtx( cs, minDepth, maxDepth, NUM_EXTRA_FEATURES ) );//push LCUΩ¯»Î
 
 #if ENABLE_SPLIT_PARALLELISM
   if( m_runNextInParallel )
@@ -1388,7 +1327,7 @@ void EncModeCtrlMTnoRQT::initCULevel( Partitioner &partitioner, const CodingStru
   {// qt after bt
       for (int qp = maxQP; qp >= minQP; qp--)
       {
-        m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_QT, ETO_STANDARD, qp });//ÔøΩÔøΩQPÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩŒ™ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩRDOÔøΩÔøΩÔøΩÔøΩ
+        m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_QT, ETO_STANDARD, qp });//¡¨QP∂ºª·◊˜Œ™≤Œ ˝Ω¯––RDO¡À¬£ø
       }
   }
 
@@ -1421,7 +1360,7 @@ void EncModeCtrlMTnoRQT::initCULevel( Partitioner &partitioner, const CodingStru
     {
       m_ComprCUCtxList.back().testModes.push_back( { ETM_SPLIT_BT_V, ETO_STANDARD, qp } );
     }
-    m_ComprCUCtxList.back().set( DID_VERT_SPLIT, true );//ÔøΩÔøΩÔøΩ√±ÔøΩ÷æ
+    m_ComprCUCtxList.back().set( DID_VERT_SPLIT, true );//…Ë÷√±Í÷æ
   }
   else
   {
@@ -1469,7 +1408,7 @@ void EncModeCtrlMTnoRQT::initCULevel( Partitioner &partitioner, const CodingStru
   }
   else if( partitioner.isConsInter() )
   {
-    tryIntraRdo = tryIBCRdo = false;//IBCÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ÷°ÔøΩÔøΩ
+    tryIntraRdo = tryIBCRdo = false;//IBCΩˆœﬁ”⁄÷°ƒ⁄
   }
   checkIbc &= tryIBCRdo;
 
@@ -2168,8 +2107,8 @@ bool EncModeCtrlMTnoRQT::checkSkipOtherLfnst( const EncTestMode& encTestmode, Co
 }
 
 bool EncModeCtrlMTnoRQT::useModeResult( const EncTestMode& encTestmode, CodingStructure*& tempCS, Partitioner& partitioner )
-{//ÔøΩÔøΩ«∞tempCSÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩencTestmodeÔøΩÔøΩ ±ÔøΩÔøΩ
-  xExtractFeatures( encTestmode, *tempCS );//ÔøΩÔøΩ»°param1 ÔøΩÔøΩ param2 ÔøΩÔøΩ“ª–©ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ¬µÔøΩparam2.
+{//µ±«∞tempCS≤…”√¡ÀencTestmodeµƒ ±∫Ú
+  xExtractFeatures( encTestmode, *tempCS );//Ã·»°param1 ∫Õ param2 µƒ“ª–©≤Œ ˝∏¸–¬µΩparam2.
 
   ComprCUCtx& cuECtx = m_ComprCUCtxList.back();
 
@@ -2191,7 +2130,7 @@ bool EncModeCtrlMTnoRQT::useModeResult( const EncTestMode& encTestmode, CodingSt
     cuECtx.set( BEST_TRIV_SPLIT_COST, tempCS->cost );
   }
   /*   set the correspond cost  for INTRA */
-  else if( encTestmode.type == ETM_INTRA )// intra ƒ£ Ω ÷ªÔøΩÔøΩ“ªÔøΩÔøΩCU
+  else if( encTestmode.type == ETM_INTRA )// intra ƒ£ Ω ÷ª”–“ª∏ˆCU
   {
     const CodingUnit cu = *tempCS->getCU( partitioner.chType );
 
@@ -2262,7 +2201,7 @@ bool EncModeCtrlMTnoRQT::useModeResult( const EncTestMode& encTestmode, CodingSt
 
   // for now just a simple decision based on RD-cost or choose tempCS if bestCS is not yet coded
   if( tempCS->features[ENC_FT_RD_COST] != MAX_DOUBLE && ( !cuECtx.bestCS || ( ( tempCS->features[ENC_FT_RD_COST] + ( tempCS->useDbCost ? tempCS->costDbOffset : 0 ) ) < ( cuECtx.bestCS->features[ENC_FT_RD_COST] + ( tempCS->useDbCost ? cuECtx.bestCS->costDbOffset : 0 ) ) ) ) )
-  {//ÔøΩÔøΩ“ªÔøΩ–æÔøΩÔøΩÔøΩÔøΩÔøΩtempCSÔøΩ«∑ÔøΩÔøΩÔøΩ‘≥ÔøΩŒ™bestCS
+  {//’‚“ª––æˆ∂®¡ÀtempCS «∑Òø…“‘≥…Œ™bestCS
 
     cuECtx.bestCS = tempCS;
     cuECtx.bestCU = tempCS->cus[0];
