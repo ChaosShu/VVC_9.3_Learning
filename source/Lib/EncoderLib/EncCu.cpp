@@ -390,7 +390,7 @@ double EncCu::ccCaculEntropy(const PelBuf& picOri)
 {
   auto w = picOri.width;
   auto h = picOri.height;
-  Pel freqTbl[256]{ 0 };
+  unordered_map<Pel, int> freqTbl;
 
   for (int i = 0; i < w; i++)
   {
@@ -401,14 +401,11 @@ double EncCu::ccCaculEntropy(const PelBuf& picOri)
   }
   double Entropy{ 0 }, temp{ 0 };
   SizeType pixNums{ w * h };
-  for (int i = 0; i < 256; i++)
+  for (auto i:freqTbl)
   {
-    temp = freqTbl[i];
-    if ( temp )
-    {
-      temp /= pixNums;    //¸ÅÂÊ
-      temp *= -log2(temp);//ìØ
-    }
+    temp = i.second;
+    temp /= pixNums;   //¸ÅÂÊ
+    temp *= -log2(temp);//ìØ
     Entropy += temp;
   }
   return Entropy;
