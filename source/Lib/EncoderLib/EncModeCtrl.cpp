@@ -241,56 +241,56 @@ void EncModeCtrl::ccUpdateTMbyGradient(double gradient, int qp)
 {
   int Aqp = m_ComprCUCtxList.back().testModes.back().qp;
   string bqt{ "BQTerrace" }, bbd{ "BasketballDrive" };
-  double DownTH{ 0.0 };
+  int DownTH{ 0 };
   switch (qp)
   {
   case 37: {
       if (EncModeCtrl::ccVideoName == bbd)
       {
-          DownTH = 18.366;
+          DownTH = 19;
       }
       else if (EncModeCtrl::ccVideoName == bqt)
       {
-          DownTH = 27.724;
+          DownTH = 28;
       }
       break;
   }
   case 32: {
       if (EncModeCtrl::ccVideoName == bbd)
       {
-          DownTH = 16.979;
+          DownTH = 17;
       }
       else if (EncModeCtrl::ccVideoName == bqt)
       {
-          DownTH = 23.675;
+          DownTH = 24;
       }
       break;
   }
   case 27: {
       if (EncModeCtrl::ccVideoName == bbd)
       {
-          DownTH = 15.690;
+          DownTH = 16;
       }
       else if (EncModeCtrl::ccVideoName == bqt)
       {
-          DownTH = 22.046;
+          DownTH = 23;
       }
       break;
   }
   case 22: {
       if (EncModeCtrl::ccVideoName == bbd)
       {
-        DownTH = -MAX_DOUBLE;
+        DownTH = INT32_MIN;
       }
       else if (EncModeCtrl::ccVideoName == bqt)
       {
-          DownTH = 17.852;
+          DownTH = 18;
       }
       break;
   }
   default: std::cerr << "QP is invalid"; break;
   }
-  if (gradient <= DownTH - 0.001)
+  if (gradient <= DownTH)
   {
     /*EncModeCtrl::ccjumpedCU64++; cout << ccjumpedCU64 << ' ';
     if (! (ccjumpedCU64 % 15) )
