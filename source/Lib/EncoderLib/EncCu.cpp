@@ -395,7 +395,6 @@ void EncCu::ccEarlyConsTestMode(CodingStructure*& tempCS, Partitioner& partition
   SizeType w = curArea.lwidth();
   SizeType h = curArea.lheight();
 
-  
   if (w == 64 && h == 64)/*实际的Area 的尺寸， 并非CS的尺寸*/
   {
     //cout << (partitioner.getImplicitSplit(*tempCS) != CU_DONT_SPLIT) << endl;

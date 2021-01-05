@@ -236,6 +236,7 @@ public:
   
   void ccExtractFt(CodingStructure* bestCS, Partitioner& partitioner, string filename);
   int ccCaculGradient(const PelBuf & TrueOriPic);
+  double ccCaculEntropy(const PelBuf& TrueOriPic);
   /******************/
 
   void   setMergeBestSATDCost(double cost) { m_mergeBestSATDCost = cost; }
