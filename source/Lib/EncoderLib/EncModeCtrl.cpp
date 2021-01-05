@@ -241,65 +241,69 @@ void EncModeCtrl::ccUpdateTMbyGradient(double gradient, int qp)
 {
   int Aqp = m_ComprCUCtxList.back().testModes.back().qp;
   string bqt{ "BQTerrace" }, bbd{ "BasketballDrive" };
-  double UpTH{ 0.0 };
+  double DownTH{ 0.0 };
   switch (qp)
   {
   case 37: {
       if (EncModeCtrl::ccVideoName == bbd)
       {
-          UpTH = 27.08;
+          DownTH = 18.366;
       }
       else if (EncModeCtrl::ccVideoName == bqt)
       {
-          UpTH = 51.15;
+          DownTH = 27.724;
       }
       break;
   }
   case 32: {
       if (EncModeCtrl::ccVideoName == bbd)
       {
-          UpTH = 27.08;
+          DownTH = 16.979;
       }
       else if (EncModeCtrl::ccVideoName == bqt)
       {
-          UpTH = 48.89;
+          DownTH = 23.675;
       }
       break;
   }
   case 27: {
       if (EncModeCtrl::ccVideoName == bbd)
       {
-          UpTH = 21.49;
+          DownTH = 15.690;
       }
       else if (EncModeCtrl::ccVideoName == bqt)
       {
-          UpTH = 49.84;
+          DownTH = 22.046;
       }
       break;
   }
   case 22: {
       if (EncModeCtrl::ccVideoName == bbd)
       {
-          UpTH = 15.05;
+        DownTH = -MAX_DOUBLE;
       }
       else if (EncModeCtrl::ccVideoName == bqt)
       {
-          UpTH = 17.85;
+          DownTH = 17.852;
       }
       break;
   }
   default: std::cerr << "QP is invalid"; break;
   }
-  if (gradient - UpTH >= 0.001)
+  if (gradient <= DownTH - 0.001)
   {
-    EncModeCtrl::ccjumpedCU64++; cout << ccjumpedCU64 << ' ';
-    if (! (ccjumpedCU64 % 5) )
+    /*EncModeCtrl::ccjumpedCU64++; cout << ccjumpedCU64 << ' ';
+    if (! (ccjumpedCU64 % 15) )
     {
       cout << endl;
     }
+    else
+    {
+      cout << '\t';
+    }*/
       m_ComprCUCtxList.back().testModes.clear();
       m_ComprCUCtxList.back().testModes.push_back({ { ETM_POST_DONT_SPLIT } });
-      m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_QT,ETO_STANDARD,Aqp });
+      m_ComprCUCtxList.back().testModes.push_back({ ETM_INTRA,ETO_STANDARD,Aqp });
   }
 }
 

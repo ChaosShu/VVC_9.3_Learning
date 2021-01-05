@@ -378,10 +378,12 @@ void EncCu::ccEarlyConsTestMode(CodingStructure*& tempCS, Partitioner& partition
   {
     return;
   }
-
-  if (w == 64 && h == 64)
+  
+  if (w == 64 && h == 64)/*实际的Area 的尺寸， 并非CS的尺寸*/
   {
+    //cout << (partitioner.getImplicitSplit(*tempCS) != CU_DONT_SPLIT) << endl;
     //PelBuf picOri = tempCS->getOrgBuf(curArea).Y();
+    /*cout << tempCS->area[0].x << "," << tempCS->area[0].y << endl;*/
     auto picOri = tempCS->picture->getTrueOrigBuf(curArea.Y());
     int tempGradV{ 0 }, tempGradH{ 0 }, sumGrad{ 0 };
     for (auto i = 1; i < w - 1; i++)
@@ -2777,7 +2779,6 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
   }
   /*添加快速算法的代码，添加resetTestMode(cs,)*/
   /*Chaos*/
-  //ccResetTestMode(tempCS,partitioner);
   ccEarlyConsTestMode(tempCS, partitioner);
 
   do//check CU 的每个 testmode

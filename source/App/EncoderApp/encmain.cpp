@@ -85,7 +85,7 @@ static void printMacroSettings()
 // ====================================================================================================================
 
 std::string EncModeCtrl::ccVideoName = "";/*我Chaos当场裂开了呀*/
-int EncModeCtrl::ccjumpedCU64 = 0;
+//int EncModeCtrl::ccjumpedCU64 = 0;
 
 int main(int argc, char* argv[])
 {

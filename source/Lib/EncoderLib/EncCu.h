@@ -233,8 +233,7 @@ public:
 
   /***** Chaos ******/
   //static std::string ccVideoName;
-  bool ccGetSplitFlag(CodingStructure* &tempCS,Partitioner &partitioner, bool &mtSplitFlag, bool &qtSplitFlag, double &adjDepth) const;
-  void ccSetSplitType(const EncTestMode& encTestMode, int &ccSplitType);
+  
   void ccExtractFt(CodingStructure* bestCS, Partitioner& partitioner, string filename);
   double ccCaculEntropy(CodingStructure*& tempCS);
   /******************/
