@@ -809,7 +809,7 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/ /*色度也
       else
       {
         clock_t endT{ 0 }, begT{ 0 };
-        if (tempCS->area.lwidth() != 64 && tempCS->area.lheight() != 64)
+        if (tempCS->area.lwidth() != 64 && tempCS->area.lheight() != 64)/*Chaos 计时INTRA*/
         {
           begT = std::clock();
         }
