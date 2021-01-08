@@ -730,6 +730,8 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/ /*色度也
     }
 #endif
 
+    clock_t endT{ 0 }, begT{ 0 };/*chaos*/
+
     if( currTestMode.type == ETM_INTER_ME )//帧间运动估计
     {
       if( ( currTestMode.opts & ETO_IMV ) != 0 )
@@ -808,17 +810,7 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/ /*色度也
       }
       else
       {
-        clock_t endT{ 0 }, begT{ 0 };
-        if (tempCS->area.lwidth() != 64 && tempCS->area.lheight() != 64)/*Chaos 计时INTRA*/
-        {
-          begT = std::clock();
-        }
         xCheckRDCostIntra(tempCS, bestCS, partitioner, currTestMode, false);
-        if (tempCS->area.lwidth() != 64 && tempCS->area.lheight() != 64)
-        {
-          endT = std::clock();
-          EncModeCtrl::ccIntraT += double(endT - begT) / CLOCKS_PER_SEC;
-        }
       }
     }
     else if (currTestMode.type == ETM_PALETTE)//调试版模式
@@ -835,6 +827,12 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/ /*色度也
     }
     else if( isModeSplit( currTestMode ) )
     {
+      /*  Chaos CNT  */
+      if (tempCS->area.lwidth() == 64 && tempCS->area.lheight() == 64 && currTestMode.type == ETM_SPLIT_QT)/*Chaos 计时QT*/
+      {
+        begT = std::clock();
+      }
+      /*Chaos CNT*/
       if (bestCS->cus.size() != 0)
       {
         splitmode = bestCS->cus[0]->splitSeries;
@@ -912,6 +910,13 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/ /*色度也
     {
       THROW( "Don't know how to handle mode: type = " << currTestMode.type << ", options = " << currTestMode.opts );
     }
+    /*Chaos CNT*/
+    if (tempCS->area.lwidth() == 64 && tempCS->area.lheight() == 64 && currTestMode.type == ETM_SPLIT_QT)/* 计时QT */
+    {
+      endT = std::clock();
+      EncModeCtrl::ccIntraT += double(endT - begT) / CLOCKS_PER_SEC;
+    }
+    /*Chaos CNT*/
   } while( m_modeCtrl->nextMode( *tempCS, partitioner ) );
 
 
