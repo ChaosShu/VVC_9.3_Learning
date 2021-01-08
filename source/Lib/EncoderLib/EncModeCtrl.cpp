@@ -215,6 +215,7 @@ void EncModeCtrl::initLumaDeltaQpLUT()
 
 void EncModeCtrl::ccUpdateTMbyEntropy(double entropy, int qp)
 {
+  EncModeCtrl::ccTotalCacCU64++;
   int Aqp = m_ComprCUCtxList.back().testModes.back().qp;
   string bqt{ "BQTerrace" }, bbd{ "BasketballDrive" };
   double DownTH{ 0.0 };
@@ -268,8 +269,9 @@ void EncModeCtrl::ccUpdateTMbyEntropy(double entropy, int qp)
   }
   if (entropy <= DownTH - 0.0000000000000000001)
   {
-    EncModeCtrl::ccjumpedCU64++; cout << ccjumpedCU64 << ' ';
-
+#if CHAOS_FAST_CNT
+    EncModeCtrl::ccjumpedCU64++; 
+#endif
     m_ComprCUCtxList.back().testModes.clear();
     m_ComprCUCtxList.back().testModes.push_back({ { ETM_POST_DONT_SPLIT } });
     m_ComprCUCtxList.back().testModes.push_back({ ETM_INTRA,ETO_STANDARD,Aqp });

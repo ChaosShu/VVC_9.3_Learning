@@ -86,6 +86,7 @@ static void printMacroSettings()
 
 std::string EncModeCtrl::ccVideoName = "";/*我Chaos当场裂开了呀： 静态成员变量初始化 */
 int EncModeCtrl::ccjumpedCU64 = 0;
+int EncModeCtrl::ccTotalCacCU64 = 0;
 
 int main(int argc, char* argv[])
 {
@@ -357,6 +358,7 @@ int main(int argc, char* argv[])
          (endClock - startClock) * 1.0 / CLOCKS_PER_SEC,
          encTime / 1000.0);
   cout <<"跳过的QT样本:  "<< EncModeCtrl::ccjumpedCU64 << endl;
+  cout << "全部的QT样本:  " << EncModeCtrl::ccTotalCacCU64 << endl << endl;
 #endif
 
   return 0;

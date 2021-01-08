@@ -53,8 +53,6 @@
 #include <cmath>
 #include <algorithm>
 
-
-
 //! \ingroup EncoderLib
 //! \{
 
@@ -2809,7 +2807,9 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
   }
   /*添加快速算法的代码，添加resetTestMode(cs,)*/
   /*Chaos*/
+#if CHAOS_FAST_PARTITION
   ccEarlyConsTestMode(tempCS, partitioner);
+#endif
 
   do//check CU 的每个 testmode
   {
