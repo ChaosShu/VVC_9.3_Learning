@@ -320,7 +320,7 @@ public:
 #endif
   /*Chaos*/
   static std::string ccVideoName;
-  /*static int ccjumpedCU64;*/
+  static int ccjumpedCU64;
   /*void resetTMCandidate(bool* testModeFlag, int qp);*/
   void cccontrolValidTestMode(uint8_t& flowFlag, EncTestMode testMode, Partitioner &partitioner, CodingStructure& tempCS, CodingStructure& bestCS);
   void ccUpdateTMbyEntropy(double Entropy, int QP);

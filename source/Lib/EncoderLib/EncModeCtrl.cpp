@@ -268,15 +268,8 @@ void EncModeCtrl::ccUpdateTMbyEntropy(double entropy, int qp)
   }
   if (entropy <= DownTH - 0.0000000000000000001)
   {
-    /*EncModeCtrl::ccjumpedCU64++; cout << ccjumpedCU64 << ' ';
-    if (! (ccjumpedCU64 % 15) )
-    {
-      cout << endl;
-    }
-    else
-    {
-      cout << '\t';
-    }*/
+    EncModeCtrl::ccjumpedCU64++; cout << ccjumpedCU64 << ' ';
+
     m_ComprCUCtxList.back().testModes.clear();
     m_ComprCUCtxList.back().testModes.push_back({ { ETM_POST_DONT_SPLIT } });
     m_ComprCUCtxList.back().testModes.push_back({ ETM_INTRA,ETO_STANDARD,Aqp });

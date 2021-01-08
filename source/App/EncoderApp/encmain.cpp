@@ -84,8 +84,8 @@ static void printMacroSettings()
 // Main function
 // ====================================================================================================================
 
-std::string EncModeCtrl::ccVideoName = "";/*我Chaos当场裂开了呀*/
-//int EncModeCtrl::ccjumpedCU64 = 0;
+std::string EncModeCtrl::ccVideoName = "";/*我Chaos当场裂开了呀： 静态成员变量初始化 */
+int EncModeCtrl::ccjumpedCU64 = 0;
 
 int main(int argc, char* argv[])
 {
@@ -243,7 +243,7 @@ int main(int argc, char* argv[])
 
   std::string vdo_name = pcEncApp[0]->ccgetInputVideoName();
   auto cccIndex = vdo_name.find_first_of('_');
-  vdo_name = vdo_name.substr(0,cccIndex);
+  vdo_name = vdo_name.substr(0, cccIndex);
   /*int xxxqp = pcEncApp[0]->ccgetQP();
   string MyTraceFile = vdo_name + "_QP" + std::to_string(xxxqp) + "_MyTraceFile.csv";
   ofstream mTraceF;
@@ -356,6 +356,7 @@ int main(int argc, char* argv[])
   printf(" Total Time: %12.3f sec. [user] %12.3f sec. [elapsed]\n",
          (endClock - startClock) * 1.0 / CLOCKS_PER_SEC,
          encTime / 1000.0);
+  cout <<"跳过的QT样本:  "<< EncModeCtrl::ccjumpedCU64 << endl;
 #endif
 
   return 0;
