@@ -2808,11 +2808,21 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
   /*添加快速算法的代码，添加resetTestMode(cs,)*/
   /*Chaos*/
 #if CHAOS_FAST_PARTITION
-  ccEarlyConsTestMode(tempCS, partitioner);
+#if CHAOS_LUMA_APPLY_FAST
+  if (tempCS->treeType != TREE_C)
+#endif
+  {
+    ccEarlyConsTestMode(tempCS, partitioner);
+  }
 #endif
 
   do//check CU 的每个 testmode
   {
+
+#if CHAOS_TIMING_QT64
+    std::clock_t begT{ 0 }, endT{ 0 };
+#endif
+
     for (int i = compBegin; i < (compBegin + numComp); i++) // 对于CU每个possible的分量（根据之前的规则已确定好）
     {//PLT模式的一些处理
       ComponentID comID = jointPLT ? (ComponentID)compBegin : ((i > 0) ? COMPONENT_Cb : COMPONENT_Y);
@@ -2972,6 +2982,13 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
       {
         splitmode = bestCS->cus[0]->splitSeries;
       }
+
+#if CHAOS_TIMING_QT64
+      if (tempCS->area.lwidth() == 64 && tempCS->area.lheight() == 64 && currTestMode.type == ETM_SPLIT_QT)
+      {
+        begT = std::clock();
+      }
+#endif
       assert( partitioner.modeType == tempCS->modeType );
       int signalModeConsVal = tempCS->signalModeCons( getPartSplit( currTestMode ), partitioner, modeTypeParent );//帧内帧间等，mode_type继承方式
       int numRoundRdo = signalModeConsVal == LDT_MODE_TYPE_SIGNAL ? 2 : 1;//RDO轮数：mode_type由继承或推断得到，只需进行一轮RDO；否则需要进行两轮RDO
@@ -3041,11 +3058,19 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
           memcpy(bestLastPLT[i], bestCS->cus[0]->cs->prevPLT.curPLT[i], bestCS->cus[0]->cs->prevPLT.curPLTSize[comID] * sizeof(Pel));
         }
       }
+
     }
     else
     {
       THROW( "Don't know how to handle mode: type = " << currTestMode.type << ", options = " << currTestMode.opts );
     }
+#if CHAOS_TIMING_QT64
+    if (tempCS->area.lwidth() == 64 && tempCS->area.lheight() == 64 && currTestMode.type == ETM_SPLIT_QT)
+    {
+      endT = std::clock();
+      EncModeCtrl::ccQTOccupiedT += double(begT - endT) / CLOCKS_PER_SEC;
+    }
+#endif
   } while( m_modeCtrl->nextMode( *tempCS, partitioner ) );//next
   
   //在这里可能已经更完了best了,dont'split也被跳过了
