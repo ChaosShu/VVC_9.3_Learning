@@ -446,7 +446,7 @@ protected:
 
   //====== Tool list ========
   int       m_inputBitDepth[MAX_NUM_CHANNEL_TYPE];         ///< bit-depth of input file
-  int       m_bitDepth[MAX_NUM_CHANNEL_TYPE];
+  int       m_bitDepth[MAX_NUM_CHANNEL_TYPE];              ///< Internal bit-depth (Chaos:maybe)
   bool      m_bUseASR;
   bool      m_bUseHADME;
   bool      m_useRDOQ;
