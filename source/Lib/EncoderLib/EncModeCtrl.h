@@ -320,9 +320,14 @@ public:
 #endif
   /*Chaos*/
   static std::string ccVideoName;
+#if CHAOS_FAST_CNT         ///Chaos: 开关：64x64下QT所占的时间
   static int ccjumpedCU64;
   static int ccTotalCacCU64;
+#endif
+#if CHAOS_TIMING_QT64
   static double ccQTOccupiedT;
+#endif
+
   /*void resetTMCandidate(bool* testModeFlag, int qp);*/
   void cccontrolValidTestMode(uint8_t& flowFlag, EncTestMode testMode, Partitioner &partitioner, CodingStructure& tempCS, CodingStructure& bestCS);
   void ccUpdateTMbyEntropy(double Entropy, int QP);

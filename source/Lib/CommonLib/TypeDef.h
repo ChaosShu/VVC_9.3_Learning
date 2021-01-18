@@ -169,10 +169,10 @@ typedef std::pair<int, int>  TrCost;
 #define U0033_ALTERNATIVE_TRANSFER_CHARACTERISTICS_SEI    1 ///< Alternative transfer characteristics SEI message (JCTVC-U0033, with syntax naming from V1005)
 #define X0038_LAMBDA_FROM_QP_CAPABILITY                   1 ///< This approach derives lambda from QP+QPoffset+QPoffset2. QPoffset2 is derived from QP+QPoffset using a linear model that is clipped between 0 and 3.
                                                             // To use this capability enable config parameter LambdaFromQpEnable
-#define CHAOS_FAST_CNT 1            ///Chaos: 开关：计数跳过QT的64x64CU数
-#define CHAOS_FAST_PARTITION 1      ///Chaos: 开关：开启快速算法
-#define CHAOS_TIMING_QT64 1         ///Chaos: 开关：64x64下QT所占的时间，可与“CHAOS_FAST_PARTITION搭配使用”
-#define CHAOS_LUMA_APPLY_FAST 1     ///Chaos: 开关：仅亮度使用快速算法
+#define CHAOS_FAST_CNT 0            ///Chaos: 开关：计数跳过QT的64x64CU数
+#define CHAOS_FAST_PARTITION 0      ///Chaos: 开关：开启快速算法
+#define CHAOS_TIMING_QT64 0         ///Chaos: 开关：64x64下QT所占的时间，可与“CHAOS_FAST_PARTITION搭配组合使用”
+#define CHAOS_LUMA_APPLY_FAST 0     ///Chaos: 开关：仅亮度使用快速算法
 // ====================================================================================================================
 // Tool Switches
 // ====================================================================================================================

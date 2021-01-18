@@ -85,9 +85,13 @@ static void printMacroSettings()
 // ====================================================================================================================
 
 std::string EncModeCtrl::ccVideoName = "";/*我Chaos当场裂开了呀： 静态成员变量初始化 */
+#if CHAOS_FAST_CNT 
 int EncModeCtrl::ccjumpedCU64 = 0;
 int EncModeCtrl::ccTotalCacCU64 = 0;
+#endif
+#if CHAOS_TIMING_QT64
 double EncModeCtrl::ccQTOccupiedT = 0.0;
+#endif
 
 int main(int argc, char* argv[])
 {

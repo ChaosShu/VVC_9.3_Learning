@@ -234,10 +234,12 @@ public:
   /***** Chaos ******/
   //static std::string ccVideoName;
   
-  void ccExtractFt(CodingStructure* bestCS, Partitioner& partitioner, string filename);
+#if CHAOS_FAST_PARTITION
+  /*void ccExtractFt(CodingStructure* bestCS, Partitioner& partitioner, string filename);*/
   //int ccCaculGradient(const PelBuf & TrueOriPic);
   double ccCaculEntropy(const PelBuf& TrueOriPic);
   /******************/
+#endif
 
   void   setMergeBestSATDCost(double cost) { m_mergeBestSATDCost = cost; }
   double getMergeBestSATDCost()            { return m_mergeBestSATDCost; }
@@ -309,8 +311,11 @@ protected:
 
   void xCheckPLT              ( CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &partitioner, const EncTestMode& encTestMode );
   
+#if CHAOS_FAST_PARTITION
+  /*CHAOS*/
   //void ccResetTestMode(CodingStructure*& tempCS, Partitioner& partitioner);// my member function
   void ccEarlyConsTestMode(CodingStructure*& tempCS, Partitioner& partitioner);
+#endif
 };
 
 //! \}
