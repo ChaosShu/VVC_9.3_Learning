@@ -383,7 +383,7 @@ EncCu::~EncCu()
 //  auto avgGrad = sumGrad / (w * h);
 //  return avgGrad;
 //}
-
+#if CHAOS_FAST_PARTITION
 double EncCu::ccCaculEntropy(const PelBuf& picOri)
 {
   auto w = picOri.width;
@@ -408,6 +408,7 @@ double EncCu::ccCaculEntropy(const PelBuf& picOri)
   }
   return Entropy;
 }
+
 
 void EncCu::ccEarlyConsTestMode(CodingStructure*& tempCS, Partitioner& partitioner)
 {
@@ -491,6 +492,7 @@ void EncCu::ccEarlyConsTestMode(CodingStructure*& tempCS, Partitioner& partition
 
   //m_modeCtrl->ccUpdateTMbyEntropy();
 }
+#endif
 
 //void EncCu::ccResetTestMode(CodingStructure *&tempCS, Partitioner &partitioner)
 //{
@@ -2831,6 +2833,7 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
     }
     EncTestMode currTestMode = m_modeCtrl->currTestMode();/* ................. */
     
+#if CHAOS_FAST_PARTITION
     uint8_t flowFlag{ 1 };
     m_modeCtrl->cccontrolValidTestMode(flowFlag, currTestMode, partitioner, *tempCS, *bestCS);
     if (0 == flowFlag)
@@ -2841,6 +2844,7 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
     {
       break;
     }
+#endif
 
     currTestMode.maxCostAllowed = maxCostAllowed;
 

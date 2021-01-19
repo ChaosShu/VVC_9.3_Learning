@@ -328,9 +328,11 @@ public:
   static double ccQTOccupiedT;
 #endif
 
-  /*void resetTMCandidate(bool* testModeFlag, int qp);*/
+/*void resetTMCandidate(bool* testModeFlag, int qp);*/
+#if CHAOS_FAST_PARTITION
   void cccontrolValidTestMode(uint8_t& flowFlag, EncTestMode testMode, Partitioner &partitioner, CodingStructure& tempCS, CodingStructure& bestCS);
   void ccUpdateTMbyEntropy(double Entropy, int QP);
+#endif
 
   void         init                 ( EncCfg *pCfg, RateCtrl *pRateCtrl, RdCost *pRdCost );
   bool         tryModeMaster        ( const EncTestMode& encTestmode, const CodingStructure &cs, Partitioner& partitioner );

@@ -212,7 +212,7 @@ void EncModeCtrl::initLumaDeltaQpLUT()
 }
 
 /*Chaos*/
-
+#if CHAOS_FAST_PARTITION
 void EncModeCtrl::ccUpdateTMbyEntropy(double entropy, int qp)
 {
   EncModeCtrl::ccTotalCacCU64++;
@@ -297,6 +297,7 @@ void EncModeCtrl::cccontrolValidTestMode(uint8_t &flowFlag, EncTestMode testMode
     }
   }
 }
+#endif
 
 int EncModeCtrl::calculateLumaDQP( const CPelBuf& rcOrg )
 {

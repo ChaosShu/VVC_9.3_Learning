@@ -362,9 +362,13 @@ int main(int argc, char* argv[])
   printf(" Total Time: %12.3f sec. [user] %12.3f sec. [elapsed]\n",
          (endClock - startClock) * 1.0 / CLOCKS_PER_SEC,
          encTime / 1000.0);
+#if CHAOS_FAST_CNT
   cout <<"跳过的QT样本:  "<< EncModeCtrl::ccjumpedCU64 << endl;
   cout << "全部的QT样本:  " << EncModeCtrl::ccTotalCacCU64 << endl;
+#endif
+#if CHAOS_TIMING_QT64
   cout << "当前QT所占时间:  " << EncModeCtrl::ccQTOccupiedT << endl;
+#endif
 #endif
 
   return 0;
