@@ -232,12 +232,10 @@ public:
   EncModeCtrl* getModeCtrl  () { return m_modeCtrl; }
 
   /***** Chaos Member******/
-  static std::string ccCsvFile;
-  static bool roundFlag;
-  bool ccGetSplitFlag(CodingStructure* &tempCS,Partitioner &partitioner, bool &mtSplitFlag, bool &qtSplitFlag, double &adjDepth) const;
+  static std::string ccCsvFile;/* 要生成的csv文件名 */
+  static bool roundFlag;/*由于code_tree_unit 会在encodeSlice里调用和compressSlice->compressCtus里调用，多次调用，因此用此标志限制输出次数*/
   void ccSetSplitType(const EncTestMode& encTestMode, int &ccSplitType);
   void ccExtractFt(CodingStructure* bestCS, Partitioner& partitioner, string filename);
-  double ccCaculEntropy(CodingStructure*& tempCS);
   /******************/
 
   void   setMergeBestSATDCost(double cost) { m_mergeBestSATDCost = cost; }

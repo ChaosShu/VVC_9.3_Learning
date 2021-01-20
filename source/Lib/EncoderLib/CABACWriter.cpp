@@ -429,12 +429,14 @@ void CABACWriter::coding_tree(const CodingStructure& cs, Partitioner& partitione
     auto filename = EncCu::ccCsvFile;/*Chaos  Chaos*/
     ofstream mTraceF;
     mTraceF.open(filename, ios::app);
-    auto xxxpoc = cs.slice->getPOC() << 3;//for subSampleRatio : 8
+    auto xxxpoc = cs.slice->getPOC() * m_EncCu->getEncCfg()->getTemporalSubsampleRatio();//for subSampleRatio : 自适应更新，poc对应为不下采样的poc
+    auto inputBitDepth = m_EncCu->getEncCfg()->getInputBitDepth();
     auto x0 = partitioner.currArea().lx();
     auto y0 = partitioner.currArea().ly();
     auto width = partitioner.currArea().lwidth();
     auto height = partitioner.currArea().lheight();
     auto totalPixel = width * height;
+    
     mTraceF << xxxpoc << ',' << x0 << ',' << y0 << ',' << width << ',' << height << ',' << splitMode << ','
       << totalPixel << endl;
     mTraceF.close();
