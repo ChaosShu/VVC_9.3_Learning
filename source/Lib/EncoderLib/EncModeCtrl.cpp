@@ -48,6 +48,7 @@
 #include "CommonLib/dtrace_next.h"
 
 #include <cmath>
+#include <fstream>
 
 
 void EncModeCtrl::init( EncCfg *pCfg, RateCtrl *pRateCtrl, RdCost* pRdCost )
@@ -213,70 +214,6 @@ void EncModeCtrl::initLumaDeltaQpLUT()
 
 /*Chaos*/
 #if CHAOS_FAST_PARTITION
-void EncModeCtrl::ccUpdateTMbyEntropy(double entropy, int qp)
-{
-  EncModeCtrl::ccTotalCacCU64++;
-  int Aqp = m_ComprCUCtxList.back().testModes.back().qp;
-  string bqt{ "BQTerrace" }, bbd{ "BasketballDrive" };
-  double DownTH{ 0.0 };
-  switch (qp)
-  {
-  case 37: {
-    if (EncModeCtrl::ccVideoName == bbd)
-    {
-      DownTH = 4.390946585;
-    }
-    else if (EncModeCtrl::ccVideoName == bqt)
-    {
-      DownTH = 4.231090508;
-    }
-    break;
-  }
-  case 32: {
-    if (EncModeCtrl::ccVideoName == bbd)
-    {
-      DownTH = 4.286757379;
-    }
-    else if (EncModeCtrl::ccVideoName == bqt)
-    {
-      DownTH = 4.126532274;
-    }
-    break;
-  }
-  case 27: {
-    if (EncModeCtrl::ccVideoName == bbd)
-    {
-      DownTH = 4.201509366;
-    }
-    else if (EncModeCtrl::ccVideoName == bqt)
-    {
-      DownTH = 4.090120857;
-    }
-    break;
-  }
-  case 22: {
-    if (EncModeCtrl::ccVideoName == bbd)
-    {
-      DownTH = -MAX_DOUBLE;
-    }
-    else if (EncModeCtrl::ccVideoName == bqt)
-    {
-      DownTH = 3.926533147;
-    }
-    break;
-  }
-  default: std::cerr << "QP is invalid"; break;
-  }
-  if (entropy <= DownTH - 0.0000000000000000001)
-  {
-#if CHAOS_FAST_CNT
-    EncModeCtrl::ccjumpedCU64++; 
-#endif
-    m_ComprCUCtxList.back().testModes.clear();
-    m_ComprCUCtxList.back().testModes.push_back({ { ETM_POST_DONT_SPLIT } });
-    m_ComprCUCtxList.back().testModes.push_back({ ETM_INTRA,ETO_STANDARD,Aqp });
-  }
-}
 
 void EncModeCtrl::cccontrolValidTestMode(uint8_t &flowFlag, EncTestMode testMode, Partitioner& partitioner, CodingStructure& tempCS, CodingStructure& bestCS)
 {
@@ -295,6 +232,61 @@ void EncModeCtrl::cccontrolValidTestMode(uint8_t &flowFlag, EncTestMode testMode
       m_ComprCUCtxList.back().testModes.pop_back();
       flowFlag = 2;
     }
+  }
+}
+
+std::unordered_map<std::string, std::string> EncModeCtrl::ccGenerateQTmap(std::string file)/*used only once*/
+{
+  clock_t begT{ 0 }, endT{ 0 };/*measurements*/
+  int memSize{ -1 };
+  begT = std::clock();
+
+  std::unordered_map<std::string, std::string> otpt;
+
+  string usedInfo[4], lineStr;/*文件相关*/
+  std::ifstream fp(file, ios::in);
+  char* left{ nullptr }, * next{ nullptr };
+
+  std::getline(fp, lineStr);//跳过首行
+  while (std::getline(fp, lineStr))
+  {
+    int cnt{ 6 };//只需读一行的前6列
+    left = &lineStr[0];
+    int usedIdx{ 0 };
+    while (cnt--)
+    {
+      auto tt = strtok_s(left, "\t", &next);//next为一次分割完后，后面part的首地址
+      if (tt && (cnt == 5 || cnt == 4 || cnt == 3 || cnt == 0))
+      {
+        if (cnt == 5 && *tt != '0')
+        {
+          fp.close();
+          endT = clock();
+          cout << "创建QTmap用时：" << double(endT - begT) / CLOCKS_PER_SEC << " s" << endl;
+          cout << "QTmap大小：" << sizeof(otpt) << " Bytes" << endl;
+          return otpt;
+        }
+        usedInfo[usedIdx++] = tt;
+      }
+      left = next; next = nullptr;
+    }
+    otpt.insert({ usedInfo[0] + usedInfo[1] + usedInfo[2] , usedInfo[3] });
+  }
+  fp.close();
+  return std::unordered_map<string, string>();
+}
+void EncModeCtrl::ccUpdateTMbyQTmap(std::string key, int qp)
+{
+  auto bestSplit = ccQTmap.at(key);
+  m_ComprCUCtxList.back().testModes.clear();
+  m_ComprCUCtxList.back().testModes.push_back({ { ETM_POST_DONT_SPLIT } });
+  if (bestSplit == "1")//QT split
+  {
+    m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_QT,ETO_STANDARD,qp });
+  }
+  else//for CU64 only QT & Intra
+  {
+    m_ComprCUCtxList.back().testModes.push_back({ ETM_INTRA,ETO_STANDARD,qp });
   }
 }
 #endif

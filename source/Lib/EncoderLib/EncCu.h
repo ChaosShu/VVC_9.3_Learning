@@ -237,7 +237,7 @@ public:
 #if CHAOS_FAST_PARTITION
   /*void ccExtractFt(CodingStructure* bestCS, Partitioner& partitioner, string filename);*/
   //int ccCaculGradient(const PelBuf & TrueOriPic);
-  double ccCaculEntropy(const PelBuf& TrueOriPic);
+  
   /******************/
 #endif
 

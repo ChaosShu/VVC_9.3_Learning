@@ -122,9 +122,10 @@ public:
   int   getChromaFormatIDC() const { return m_cEncLib.getChromaFormatIdc(); }
   int   getBitDepth() const { return m_cEncLib.getBitDepth(CHANNEL_TYPE_LUMA); }
 
-  /*chaos is here*/
+  /*chaos*/
   std::string ccgetInputVideoName() const { return m_inputFileName; }
  // std::string ccgetConfigFileName() const {return m_cofile}
+  /*return key-pic QP*/
   int ccgetQP() const { return m_iQP; }
 };// END CLASS DEFINITION EncApp
 

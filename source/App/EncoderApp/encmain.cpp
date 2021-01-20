@@ -92,6 +92,9 @@ int EncModeCtrl::ccTotalCacCU64 = 0;
 #if CHAOS_TIMING_QT64
 double EncModeCtrl::ccQTOccupiedT = 0.0;
 #endif
+#if CHAOS_FAST_PARTITION
+std::unordered_map<std::string, std::string> EncModeCtrl::ccQTmap;
+#endif
 
 int main(int argc, char* argv[])
 {
@@ -250,13 +253,17 @@ int main(int argc, char* argv[])
   std::string vdo_name = pcEncApp[0]->ccgetInputVideoName();
   auto cccIndex = vdo_name.find_first_of('_');
   vdo_name = vdo_name.substr(0, cccIndex);
-  /*int xxxqp = pcEncApp[0]->ccgetQP();
+  int xxxqp = pcEncApp[0]->ccgetQP();/*
   string MyTraceFile = vdo_name + "_QP" + std::to_string(xxxqp) + "_MyTraceFile.csv";
   ofstream mTraceF;
   mTraceF.open(MyTraceFile, ios::out);
   mTraceF << "poc,x0,y0,width,height,bestSplit,totalPixel" << endl;
   mTraceF.close();*/
   EncModeCtrl::ccVideoName = vdo_name;
+#if CHAOS_FAST_PARTITION
+  string iealPartition{ vdo_name + "_QP" + std::to_string(xxxqp) + "_CU64.txt" };
+  EncModeCtrl::ccQTmap = EncModeCtrl::ccGenerateQTmap(iealPartition);
+#endif
   
   while( !eos )
   { //while每执行一次，代表已编码完一整个GOP

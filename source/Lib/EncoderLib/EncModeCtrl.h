@@ -330,8 +330,10 @@ public:
 
 /*void resetTMCandidate(bool* testModeFlag, int qp);*/
 #if CHAOS_FAST_PARTITION
+  static std::unordered_map<std::string, std::string> ccQTmap;
   void cccontrolValidTestMode(uint8_t& flowFlag, EncTestMode testMode, Partitioner &partitioner, CodingStructure& tempCS, CodingStructure& bestCS);
-  void ccUpdateTMbyEntropy(double Entropy, int QP);
+  static std::unordered_map<std::string, std::string> ccGenerateQTmap(std::string file);
+  void ccUpdateTMbyQTmap(std::string key, int qp);
 #endif
 
   void         init                 ( EncCfg *pCfg, RateCtrl *pRateCtrl, RdCost *pRdCost );
