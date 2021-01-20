@@ -256,6 +256,13 @@ void EncCu::ccExtractFt(CodingStructure* bestCS, Partitioner& partitioner, strin
 
 }
 
+int EncCu::ccGetGradient(CompArea& area, int inputDepth)
+{
+  
+  auto buf=area
+  return 0;
+}
+
 
 /** \param    pcEncLib      pointer of encoder class
  */
