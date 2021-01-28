@@ -256,11 +256,52 @@ void EncCu::ccExtractFt(CodingStructure* bestCS, Partitioner& partitioner, strin
 
 }
 
-int EncCu::ccGetGradient(CompArea& area, int inputDepth)
+int EncCu::ccGetGradient(const CodingStructure& cs, const CompArea& ClipedArea, int inputDepth)
 {
+  int G{ 0 };
+  uint32_t w{ ClipedArea.width }, h{ ClipedArea.height };
+  PelBuf& areaBuf = cs.picture->getTrueOrigBuf(ClipedArea);
   
-  auto buf=area
-  return 0;
+  int gH{ 0 }, gV{ 0 }, g{ 0 };
+  for (size_t i = 1; i < w-1 ; i++)
+  {
+    for (size_t j = 1; j < h-1 ; j++)
+    {
+      gH = -areaBuf.at(i - 1, j - 1) - areaBuf.at(i - 1, j) << 1 - areaBuf.at(i - 1, j + 1)
+        + areaBuf.at(i + 1, j - 1) + areaBuf.at(i + 1, j) << 1 + areaBuf.at(i + 1, j + 1);
+      gV = -areaBuf.at(i - 1, j - 1) - areaBuf.at(i, j - 1) << 1 - areaBuf.at(i + 1, j - 1)
+        + areaBuf.at(i - 1, j + 1) + areaBuf.at(i, j + 1) << 1 + areaBuf.at(i + 1, j + 1);
+      g = std::abs(gH) + abs(gV);
+    }
+  }
+  g /= ClipedArea.area();
+  g = inputDepth == 8 ? g >> 2 : g;
+  return g;
+}
+
+double EncCu::ccgetEntropy(const CodingStructure& cs, const CompArea& ClipedArea)
+{
+  int levelCnts{ 0 };
+  double E{ 0 };
+  uint32_t w{ ClipedArea.width }, h{ ClipedArea.height };
+  PelBuf& areaBuf = cs.picture->getTrueOrigBuf(ClipedArea);
+  std::unordered_map<int, double> freqMap;
+  for (size_t i = 1; i < w - 1; i++)
+  {
+    for (size_t j = 1; j < h - 1; j++)
+    {
+      freqMap[areaBuf.at(i, j)] += 1.0;
+      levelCnts++;
+    }
+  }
+  for (auto &it : freqMap)
+  {
+    it.second /= levelCnts;//¸ÅÂÊ
+    it.second = -10 * std::log10(it.second);//ìØ
+    E += it.second;
+  }
+
+  return E;
 }
 
 

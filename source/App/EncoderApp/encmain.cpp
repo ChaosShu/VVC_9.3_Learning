@@ -247,7 +247,7 @@ int main(int argc, char* argv[])
   string MyTraceFile = vdo_name + "_QP" + std::to_string(xxxqp) + "_MyTraceFile.csv";
   ofstream mTraceF;
   mTraceF.open(MyTraceFile, ios::out);
-  mTraceF << "poc,x0,y0,width,height,bestSplit,totalPixel" << endl;
+  mTraceF << "poc,x0,y0,width,height,splitMode,Gradient,Entropy" << endl;
   mTraceF.close();
   EncCu::ccCsvFile = MyTraceFile;
 
