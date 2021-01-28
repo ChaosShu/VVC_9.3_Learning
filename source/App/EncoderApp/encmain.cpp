@@ -367,6 +367,11 @@ int main(int argc, char* argv[])
          encTime / 1000.0,
          totalTime / 1000.0);
 #else
+
+#if CHAOS_FAST_PARTITION
+  cout << "快速算法耗时:  " << EncCu::ccUserTime << endl;
+#endif // CHAOS_FAST_PARTITION
+
   printf(" Total Time: %12.3f sec. [user] %12.3f sec. [elapsed]\n",
          (endClock - startClock) * 1.0 / CLOCKS_PER_SEC,
          encTime / 1000.0);
@@ -378,9 +383,6 @@ int main(int argc, char* argv[])
   cout << "当前QT所占时间:  " << EncModeCtrl::ccQTOccupiedT << endl;
 #endif
 #endif
-#if CHAOS_FAST_PARTITION
-  cout << "快速算法耗时:  " << EncCu::ccUserTime << endl;
-#endif // CHAOS_FAST_PARTITION
 
   return 0;
 }
