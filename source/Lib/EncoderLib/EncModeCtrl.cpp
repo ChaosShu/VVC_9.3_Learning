@@ -256,7 +256,7 @@ std::unordered_map<std::string, std::string> EncModeCtrl::ccGenerateQTmap(std::s
     while (cnt--)
     {
       auto tt = strtok_s(left, "\t", &next);//next为一次分割完后，后面part的首地址
-      if (tt && (cnt == 5 || cnt == 4 || cnt == 3 || cnt == 0))
+      if (tt && (cnt == 5 || cnt == 4 || cnt == 3 || cnt == 0))//只取这几列 （有效的数据）
       {
         if (cnt == 5 && *tt != '0')
         {
@@ -280,12 +280,28 @@ void EncModeCtrl::ccUpdateTMbyQTmap(std::string key, int qp)
   auto bestSplit = ccQTmap.at(key);
   m_ComprCUCtxList.back().testModes.clear();
   m_ComprCUCtxList.back().testModes.push_back({ { ETM_POST_DONT_SPLIT } });
-  if (bestSplit == "1")//QT split
-  {
+  if (bestSplit == "1")
+  {//QT split
     m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_QT,ETO_STANDARD,qp });
   }
-  else//for CU64 only QT & Intra
-  {
+  else if (bestSplit == "2")
+  {//BT-H
+    m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_BT_H,ETO_STANDARD,qp });
+  }
+  else if (bestSplit == "3")
+  {//BT-V
+    m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_BT_V,ETO_STANDARD,qp });
+  }
+  else if (bestSplit == "4")
+  {//TT-H
+    m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_TT_H,ETO_STANDARD,qp });
+  }
+  else if (bestSplit == "5")
+  {//TT-V
+    m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_TT_V,ETO_STANDARD,qp });
+  }
+  else
+  {//Intra
     m_ComprCUCtxList.back().testModes.push_back({ ETM_INTRA,ETO_STANDARD,qp });
   }
 }

@@ -262,7 +262,7 @@ int main(int argc, char* argv[])
   mTraceF.close();*/
   EncModeCtrl::ccVideoName = vdo_name;
 #if CHAOS_FAST_PARTITION
-  string iealPartition{ vdo_name + "_QP" + std::to_string(xxxqp) + "_CU64.txt" };
+  string iealPartition{ vdo_name + "_QP" + std::to_string(xxxqp) + "_CU32.txt" };
   EncModeCtrl::ccQTmap = EncModeCtrl::ccGenerateQTmap(iealPartition);
 #endif
   
