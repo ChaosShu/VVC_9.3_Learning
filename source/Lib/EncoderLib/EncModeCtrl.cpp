@@ -247,9 +247,10 @@ std::unordered_map<std::string, std::string> EncModeCtrl::ccGenerateQTmap(std::s
   std::ifstream fp(file, ios::in);
   char* left{ nullptr }, * next{ nullptr };
 
-  std::getline(fp, lineStr);//跳过首行
+  //std::getline(fp, lineStr);//跳过首行
   while (std::getline(fp, lineStr))
   {
+    //lineStr.erase(std::remove(lineStr.begin(), lineStr.end(), '\0'), lineStr.end());本准备用来解决乱码的问题（编码格式导致，后采用UTF-8）
     int cnt{ 6 };//只需读一行的前6列
     left = &lineStr[0];
     int usedIdx{ 0 };
@@ -258,13 +259,14 @@ std::unordered_map<std::string, std::string> EncModeCtrl::ccGenerateQTmap(std::s
       auto tt = strtok_s(left, "\t", &next);//next为一次分割完后，后面part的首地址
       if (tt && (cnt == 5 || cnt == 4 || cnt == 3 || cnt == 0))//只取这几列 （有效的数据）
       {
-        if (cnt == 5 && *tt != '0')
+        if (cnt == 5 && *tt != '0')// '!=0' 这里表示 我只利用一帧数据 即POC==0，当 POC!=0 时退出QTMap构建
         {
           fp.close();
           endT = clock();
+          cout << "已读取第一帧统计数据" << endl;
           cout << "创建QTmap用时：" << double(endT - begT) / CLOCKS_PER_SEC << " s" << endl;
           cout << "QTmap大小：" << sizeof(otpt) << " Bytes" << endl;
-          return otpt;
+          return otpt;//理论上应该从这里推出此函数
         }
         usedInfo[usedIdx++] = tt;
       }
@@ -273,39 +275,51 @@ std::unordered_map<std::string, std::string> EncModeCtrl::ccGenerateQTmap(std::s
     otpt.insert({ usedInfo[0] + usedInfo[1] + usedInfo[2] , usedInfo[3] });
   }
   fp.close();
-  return std::unordered_map<string, string>();
+  endT = clock();
+  cout << "已读取所有帧统计数据" << endl;
+  cout << "创建QTmap用时：" << double(endT - begT) / CLOCKS_PER_SEC << " s" << endl;
+  cout << "QTmap大小：" << sizeof(otpt) << " Bytes" << endl;
+  return otpt;
 }
+
 void EncModeCtrl::ccUpdateTMbyQTmap(std::string key, int qp)
 {
-  auto bestSplit = ccQTmap.at(key);
-  m_ComprCUCtxList.back().testModes.clear();
-  m_ComprCUCtxList.back().testModes.push_back({ { ETM_POST_DONT_SPLIT } });
-  if (bestSplit == "1")
-  {//QT split
-    m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_QT,ETO_STANDARD,qp });
+  if (ccQTmap.count(key) == 1)
+  {
+    auto bestSplit = ccQTmap.at(key);
+    m_ComprCUCtxList.back().testModes.clear();
+    m_ComprCUCtxList.back().testModes.push_back({ { ETM_POST_DONT_SPLIT } });
+    if (bestSplit == "1")
+    {//QT split
+      m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_QT,ETO_STANDARD,qp });
+    }
+    else if (bestSplit == "2")
+    {//BT-H
+      m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_BT_H,ETO_STANDARD,qp });
+    }
+    else if (bestSplit == "3")
+    {//BT-V
+      m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_BT_V,ETO_STANDARD,qp });
+    }
+    else if (bestSplit == "4")
+    {//TT-H
+      m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_TT_H,ETO_STANDARD,qp });
+    }
+    else if (bestSplit == "5")
+    {//TT-V
+      m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_TT_V,ETO_STANDARD,qp });
+    }
+    else
+    {//Intra
+      m_ComprCUCtxList.back().testModes.push_back({ ETM_INTRA,ETO_STANDARD,qp });
+    }
   }
-  else if (bestSplit == "2")
-  {//BT-H
-    m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_BT_H,ETO_STANDARD,qp });
+  else {
+    cout << "QTmap ERRO, unreal key-value match" << endl;
   }
-  else if (bestSplit == "3")
-  {//BT-V
-    m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_BT_V,ETO_STANDARD,qp });
-  }
-  else if (bestSplit == "4")
-  {//TT-H
-    m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_TT_H,ETO_STANDARD,qp });
-  }
-  else if (bestSplit == "5")
-  {//TT-V
-    m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_TT_V,ETO_STANDARD,qp });
-  }
-  else
-  {//Intra
-    m_ComprCUCtxList.back().testModes.push_back({ ETM_INTRA,ETO_STANDARD,qp });
-  }
+  
 }
-#endif
+#endif //CHAOS_FAST_PARTITION
 
 int EncModeCtrl::calculateLumaDQP( const CPelBuf& rcOrg )
 {
