@@ -85,7 +85,7 @@ static void printMacroSettings()
 // ====================================================================================================================
 
 std::string EncCu::ccCsvFile = "";/*我Chaos当场裂开了呀:静态类成员变量：要先定义才能去用*/
-bool EncCu::roundFlag = false;
+//bool EncCu::roundFlag = false;
 int main(int argc, char* argv[])
 {
   // print information
@@ -247,7 +247,10 @@ int main(int argc, char* argv[])
   string MyTraceFile = vdo_name + "_QP" + std::to_string(xxxqp) + "_MyTraceFile.csv";
   ofstream mTraceF;
   mTraceF.open(MyTraceFile, ios::out);
-  mTraceF << "poc,x0,y0,width,height,splitMode,Gradient,Entropy" << endl;
+                                     /*pX0,pY0,pW,pH,*/
+                                  //|
+  mTraceF << "poc,x0,y0,width,height,splitMode,Gradient,Entropy,area" << endl;
+
   mTraceF.close();
   EncCu::ccCsvFile = MyTraceFile;
 

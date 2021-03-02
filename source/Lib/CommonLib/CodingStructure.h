@@ -73,9 +73,6 @@ class CodingStructure
 public:
 
   UnitArea         area;
-  /*Chaos*/
-  int ccBestSplit;
-
   Picture         *picture;
   CodingStructure *parent;
   CodingStructure *bestCS;

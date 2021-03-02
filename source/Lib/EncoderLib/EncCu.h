@@ -233,7 +233,7 @@ public:
 
   /***** Chaos Member******/
   static std::string ccCsvFile;/* 要生成的csv文件名 */
-  static bool roundFlag;/*由于code_tree_unit 会在encodeSlice里调用和compressSlice->compressCtus里调用，多次调用，因此用此标志限制输出次数*/
+  //static bool roundFlag;/*由于code_tree_unit 会在encodeSlice里调用和compressSlice->compressCtus里调用，多次调用，因此用此标志限制输出次数*/
   void ccSetSplitType(const EncTestMode& encTestMode, int &ccSplitType);
   void ccExtractFt(CodingStructure* bestCS, Partitioner& partitioner, string filename);
   int ccGetGradient(const CodingStructure& cs, const CompArea& ClipedArea, int inputDepth);
@@ -310,8 +310,6 @@ protected:
 
   void xCheckPLT              ( CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &partitioner, const EncTestMode& encTestMode );
   
-  void ccResetTestMode(CodingStructure*& tempCS, Partitioner& partitioner);// my member function
-  void ccEarlyConsTestMode(CodingStructure*& tempCS, Partitioner& partitioner);
 };
 
 //! \}

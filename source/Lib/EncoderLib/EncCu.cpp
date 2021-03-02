@@ -234,24 +234,32 @@ void EncCu::ccSetSplitType(const EncTestMode &encTestMode, int &ccSplitType)
 }
 
 void EncCu::ccExtractFt(CodingStructure* bestCS, Partitioner& partitioner, string filename) {
-  int selectedSplit = bestCS->ccBestSplit;//result
-  auto x0 = bestCS->area.Y().x;
-  auto y0 = bestCS->area.Y().y;
-  auto width = bestCS->area.Y().width;
-  auto height = bestCS->area.Y().height;
-  int totalPixel = width * height;
 
-  const int currQTDepth = partitioner.currQTDepth;      //x1
-  const int currMTDepth = partitioner.currMTDepth;      //x2
+  auto xxxpoc = bestCS->slice->getPOC() * getEncCfg()->getTemporalSubsampleRatio();//for subSampleRatio : 自适应更新，poc对应为不下采样的poc
+  auto inputBitDepth = getEncCfg()->getInputBitDepth()[0];
+  CompArea& readArea = clipArea(partitioner.currArea().Y(), bestCS->picture->Y());
 
-  //const UnitArea currArea = clipArea(CS::getArea(*bestCS, bestCS->area, partitioner.chType), *bestCS->picture);
-  //const CPelBuf picOri = bestCS->getOrgBuf(currArea).Y();
+  const UnitArea& currArea = partitioner.currArea();
+  const CodingUnit& cu = *bestCS->getCU(currArea.blocks[partitioner.chType], partitioner.chType);
+  const PartSplit splitMode = CU::getSplitAtDepth(cu, partitioner.currDepth);
 
-  int xxxpoc = bestCS->slice->getPOC() << 3;
+  auto x0 = readArea.x;//
+  auto y0 = readArea.y;//
+  auto width = readArea.width;//
+  auto height = readArea.height;//
+  /*auto pX0 = bestCS->parent->area.lx();
+  auto pY0 = bestCS->parent->area.ly();
+  auto pW = bestCS->parent->area.lwidth();
+  auto pH = bestCS->parent->area.lheight();*/
+  //auto pBest = bestCS->parent->bestCS.
+  auto totalPixel = readArea.area();//
+  auto gradient = ccGetGradient(*bestCS, readArea, inputBitDepth);
+  auto Entropy = ccgetEntropy(*bestCS, readArea );
+
   ofstream mTraceF;
   mTraceF.open(filename, ios::app);
-  mTraceF << xxxpoc << ',' << x0 << ',' << y0 << ',' << width << ',' << height << ',' << bestCS->ccBestSplit << ',' 
-    << totalPixel << ','<< currQTDepth << ',' << currMTDepth << endl;
+  mTraceF << xxxpoc << ',' << x0 << ',' << y0 << ',' << width << ',' << height << ',' /*<< pX0 << ',' << pY0 << ',' << pW << ',' << pH << ',' */<< splitMode
+    << ',' << gradient << ',' << Entropy << ',' << totalPixel << endl;
   mTraceF.close();
 
 }
@@ -267,15 +275,15 @@ int EncCu::ccGetGradient(const CodingStructure& cs, const CompArea& ClipedArea, 
   {
     for (size_t j = 1; j < h-1 ; j++)
     {
-      gH = -areaBuf.at(i - 1, j - 1) - areaBuf.at(i - 1, j) << 1 - areaBuf.at(i - 1, j + 1)
-        + areaBuf.at(i + 1, j - 1) + areaBuf.at(i + 1, j) << 1 + areaBuf.at(i + 1, j + 1);
-      gV = -areaBuf.at(i - 1, j - 1) - areaBuf.at(i, j - 1) << 1 - areaBuf.at(i + 1, j - 1)
-        + areaBuf.at(i - 1, j + 1) + areaBuf.at(i, j + 1) << 1 + areaBuf.at(i + 1, j + 1);
+      gH = -areaBuf.at(i - 1, j - 1) - (areaBuf.at(i - 1, j) << 1) - areaBuf.at(i - 1, j + 1)
+        + areaBuf.at(i + 1, j - 1) + (areaBuf.at(i + 1, j) << 1) + areaBuf.at(i + 1, j + 1);
+      gV = -areaBuf.at(i - 1, j - 1) - (areaBuf.at(i, j - 1) << 1) - areaBuf.at(i + 1, j - 1)
+        + areaBuf.at(i - 1, j + 1) + (areaBuf.at(i, j + 1) << 1) + areaBuf.at(i + 1, j + 1);
       g = std::abs(gH) + abs(gV);
     }
   }
   g /= ClipedArea.area();
-  g = inputDepth == 8 ? g >> 2 : g;
+  //g = inputDepth == 8 ? g >> 2 : g;
   return g;
 }
 
@@ -600,7 +608,6 @@ bool EncCu::xCheckBestMode( CodingStructure *&tempCS, CodingStructure *&bestCS, 
 
     if( m_modeCtrl->useModeResult( encTestMode, tempCS, partitioner ) )//当前encTestMode更好
     {
-      ccSetSplitType(encTestMode, tempCS->ccBestSplit);/* Chaos 设置当前模式及划分类型，作为best的info*/
       std::swap( tempCS, bestCS );//直接就交换 tempCS 和 bestCS 了？
       // store temp best CI for next CU coding
       m_CurrCtx->best = m_CABACEstimator->getCtx();
@@ -1111,9 +1118,7 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
   
   
   /*Chaos*/
-  //ccExtractFt(bestCS, partitioner, EncCu::ccCsvFile);
-
-
+  if(partitioner.chType == CHANNEL_TYPE_LUMA) ccExtractFt(bestCS, partitioner, EncCu::ccCsvFile);
 }
 
 #if SHARP_LUMA_DELTA_QP || ENABLE_QPA_SUB_CTU

@@ -424,26 +424,26 @@ void CABACWriter::coding_tree(const CodingStructure& cs, Partitioner& partitione
   
   const PartSplit splitMode = CU::getSplitAtDepth( cu, partitioner.currDepth );
 
-  if (0 == partitioner.chType && EncCu::roundFlag)
-  {
-    auto xxxpoc = cs.slice->getPOC() * m_EncCu->getEncCfg()->getTemporalSubsampleRatio();//for subSampleRatio : 自适应更新，poc对应为不下采样的poc
-    auto inputBitDepth = m_EncCu->getEncCfg()->getInputBitDepth()[0];
-    CompArea& readArea = clipArea(partitioner.currArea().Y(), cs.picture->Y());
+  //if (0 == partitioner.chType && EncCu::roundFlag)
+  //{
+  //  auto xxxpoc = cs.slice->getPOC() * m_EncCu->getEncCfg()->getTemporalSubsampleRatio();//for subSampleRatio : 自适应更新，poc对应为不下采样的poc
+  //  auto inputBitDepth = m_EncCu->getEncCfg()->getInputBitDepth()[0];
+  //  CompArea& readArea = clipArea(partitioner.currArea().Y(), cs.picture->Y());
 
-    auto x0 = readArea.x;//
-    auto y0 = readArea.y;//
-    auto width = readArea.width;//
-    auto height = readArea.height;//
-    auto totalPixel = width * height;//
-    auto gradient = m_EncCu->ccGetGradient(cs, readArea, inputBitDepth);
-    auto Entropy = m_EncCu->ccgetEntropy(cs, readArea );
-    auto filename = EncCu::ccCsvFile;/*Chaos  Chaos*/
-    ofstream mTraceF;
-    mTraceF.open(filename, ios::app);
-    mTraceF << xxxpoc << ',' << x0 << ',' << y0 << ',' << width << ',' << height << ',' << splitMode << ',' << gradient << ',' << Entropy
-      << totalPixel << endl;
-    mTraceF.close();
-  }
+  //  auto x0 = readArea.x;//
+  //  auto y0 = readArea.y;//
+  //  auto width = readArea.width;//
+  //  auto height = readArea.height;//
+  //  auto totalPixel = width * height;//
+  //  auto gradient = m_EncCu->ccGetGradient(cs, readArea, inputBitDepth);
+  //  auto Entropy = m_EncCu->ccgetEntropy(cs, readArea );
+  //  auto filename = EncCu::ccCsvFile;/*Chaos  Chaos*/
+  //  ofstream mTraceF;
+  //  mTraceF.open(filename, ios::app);
+  //  mTraceF << xxxpoc << ',' << x0 << ',' << y0 << ',' << width << ',' << height << ',' << splitMode << ',' << gradient << ',' << Entropy
+  //    << totalPixel << endl;
+  //  mTraceF.close();
+  //}
 
   split_cu_mode( splitMode, cs, partitioner );
 
