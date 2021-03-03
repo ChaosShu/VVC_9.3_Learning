@@ -243,42 +243,52 @@ std::unordered_map<std::string, std::string> EncModeCtrl::ccGenerateQTmap(std::s
 
   std::unordered_map<std::string, std::string> otpt;
 
-  string usedInfo[4], lineStr;/*文件相关*/
+  string lineStr;/*文件相关*/     /*  0   1   2   5   */
+  
   std::ifstream fp(file, ios::in);
-  char* left{ nullptr }, * next{ nullptr };
 
-  //std::getline(fp, lineStr);//跳过首行
+  char* left{ nullptr }, * next{ nullptr };
+  std::getline(fp, lineStr);//跳过首行
   while (std::getline(fp, lineStr))
   {
-    //lineStr.erase(std::remove(lineStr.begin(), lineStr.end(), '\0'), lineStr.end());本准备用来解决乱码的问题（编码格式导致，后采用UTF-8）
-    int cnt{ 6 };//只需读一行的前6列
+    /* *****  处理读取到的一行数据  ***** */
+    string keyIdx{ "" }, splitIdx{ "" };       /*poc  x0  y0  split*/
+    int cnt{ 5 };//只需读一行的前6列:5+1
     left = &lineStr[0];
-    int usedIdx{ 0 };
     while (cnt--)
     {
-      auto tt = strtok_s(left, "\t", &next);//next为一次分割完后，后面part的首地址
-      if (tt && (cnt == 5 || cnt == 4 || cnt == 3 || cnt == 0))//只取这几列 （有效的数据）
+      auto tt = strtok_s(left, ",", &next);//next为一次分割完后，后面part的首地址, tt为分割出的头***********
+      if (tt && (cnt == 4 || cnt == 3 || cnt == 2 ))//取前三列
       {
         if (cnt == 5 && *tt != '0')// '!=0' 这里表示 我只利用一帧数据 即POC==0，当 POC!=0 时退出QTMap构建
         {
           fp.close();
           endT = clock();
-          cout << "已读取第一帧统计数据" << endl;
-          cout << "创建QTmap用时：" << double(endT - begT) / CLOCKS_PER_SEC << " s" << endl;
-          cout << "QTmap大小：" << sizeof(otpt) << " Bytes" << endl;
+          std::cout << "已读取第一帧统计数据" << endl;
+          std::cout << "创建QTmap用时：" << double(endT - begT) / CLOCKS_PER_SEC << " s" << endl;
+          std::cout << "QTmap大小：" << sizeof(otpt) << " Bytes" << endl;
           return otpt;//理论上应该从这里推出此函数
         }
-        usedInfo[usedIdx++] = tt;
+        keyIdx += tt;
       }
       left = next; next = nullptr;
     }
-    otpt.insert({ usedInfo[0] + usedInfo[1] + usedInfo[2] , usedInfo[3] });
+    splitIdx = strtok_s(left, ",", &next);;
+    if (otpt.count(keyIdx)) {
+      THROW("repeated key-value existed!");
+    }else{
+      otpt.insert({ keyIdx , splitIdx });
+    }
   }
   fp.close();
   endT = clock();
-  cout << "已读取所有帧统计数据" << endl;
-  cout << "创建QTmap用时：" << double(endT - begT) / CLOCKS_PER_SEC << " s" << endl;
-  cout << "QTmap大小：" << sizeof(otpt) << " Bytes" << endl;
+  if (otpt.empty())
+  {
+    THROW("Generate QTMap error");
+  }
+  std::cout << "已读取所有帧统计数据" << endl;
+  std::cout << "创建QTmap用时：" << double(endT - begT) / CLOCKS_PER_SEC << " s" << endl;
+  std::cout << "QTmap大小：" << sizeof(otpt) << " Bytes" << endl;
   return otpt;
 }
 
@@ -309,13 +319,15 @@ void EncModeCtrl::ccUpdateTMbyQTmap(std::string key, int qp)
     {//TT-V
       m_ComprCUCtxList.back().testModes.push_back({ ETM_SPLIT_TT_V,ETO_STANDARD,qp });
     }
-    else
+    else if (bestSplit == "2000")
     {//Intra
       m_ComprCUCtxList.back().testModes.push_back({ ETM_INTRA,ETO_STANDARD,qp });
     }
+    else THROW("illegal split mode");
+    //std::cout << "ideal terminated" << endl;
   }
   else {
-    cout << "QTmap ERRO, unreal key-value match" << endl;
+    THROW("QTmap ERRO, unexpected key-value match");
   }
   
 }

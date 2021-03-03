@@ -85,7 +85,7 @@ static void printMacroSettings()
 // ====================================================================================================================
 
 std::string EncModeCtrl::ccVideoName = "";/*我Chaos当场裂开了呀： 静态成员变量初始化 */
-double EncCu::ccUserTime = 0.0;
+
 #if CHAOS_FAST_CNT 
 int EncModeCtrl::ccjumpedCU64 = 0;
 int EncModeCtrl::ccTotalCacCU64 = 0;
@@ -94,6 +94,7 @@ int EncModeCtrl::ccTotalCacCU64 = 0;
 double EncModeCtrl::ccQTOccupiedT = 0.0;
 #endif
 #if CHAOS_FAST_PARTITION
+double EncCu::ccUserTime = 0.0;
 std::unordered_map<std::string, std::string> EncModeCtrl::ccQTmap;
 #endif
 
@@ -262,7 +263,7 @@ int main(int argc, char* argv[])
   mTraceF.close();*/
   EncModeCtrl::ccVideoName = vdo_name;
 #if CHAOS_FAST_PARTITION
-  string iealPartition{ vdo_name + "_QP" + std::to_string(xxxqp) + "_CU32.txt" };
+  string iealPartition{ vdo_name + "_QP" + std::to_string(xxxqp) + "_MyTraceFile_CU32.csv" };
   EncModeCtrl::ccQTmap = EncModeCtrl::ccGenerateQTmap(iealPartition);
 #endif
   

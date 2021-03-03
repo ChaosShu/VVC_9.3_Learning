@@ -335,7 +335,7 @@ void EncCu::ccEarlyConsTestMode(CodingStructure*& tempCS, Partitioner& partition
   SizeType w = curArea.lwidth();
   SizeType h = curArea.lheight();
 
-  if (w == 32 && h == 32 && tempCS->treeType != TREE_C)/*实际的Area 的尺寸， 并非CS的尺寸*/
+  if (w == 32 && h == 32 && partitioner.chType == CHANNEL_TYPE_LUMA)/*实际的Area 的尺寸， 并非CS的尺寸*/
   {
     string curKey{ to_string(0) + to_string(tempCS->area.lx()) + to_string(tempCS->area.ly()) };
     getModeCtrl()->ccUpdateTMbyQTmap(curKey,tempCS->currQP[CHANNEL_TYPE_LUMA]);
