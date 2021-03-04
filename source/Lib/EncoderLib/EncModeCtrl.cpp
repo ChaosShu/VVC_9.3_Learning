@@ -273,7 +273,7 @@ std::unordered_map<std::string, std::string> EncModeCtrl::ccGenerateQTmap(std::s
       }
       left = next; next = nullptr;
     }
-    splitIdx = strtok_s(left, ",", &next);;
+    splitIdx = strtok_s(left, ",", &next);
     if (otpt.count(keyIdx)) {
       THROW("repeated key-value existed!");
     }else{
