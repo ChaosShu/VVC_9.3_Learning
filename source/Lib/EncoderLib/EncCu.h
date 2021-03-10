@@ -236,7 +236,7 @@ public:
   //static bool roundFlag;/*由于code_tree_unit 会在encodeSlice里调用和compressSlice->compressCtus里调用，多次调用，因此用此标志限制输出次数*/
   void ccSetSplitType(const EncTestMode& encTestMode, int &ccSplitType);
   void ccExtractFt(CodingStructure* bestCS, Partitioner& partitioner, string filename);
-  int ccGetGradient(const CodingStructure& cs, const CompArea& ClipedArea, int inputDepth);
+  void ccGetGradient(const CodingStructure& cs, const CompArea& ClipedArea, int inputDepth, vector<double>& gradListm, bool b_dir);
   double ccgetEntropy(const CodingStructure& cs, const CompArea& ClipedArea);
   /******************/
 

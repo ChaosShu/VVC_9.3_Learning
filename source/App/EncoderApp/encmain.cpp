@@ -249,7 +249,12 @@ int main(int argc, char* argv[])
   mTraceF.open(MyTraceFile, ios::out);
                                      /*pX0,pY0,pW,pH,*/
                                   //|
-  mTraceF << "poc,x0,y0,width,height,splitMode,Gradient,Entropy,area" << endl;
+  mTraceF << "poc" << ',' << "x0" << ',' << "y0" << ',' << "width" << ',' << "height" << ',' << "depthD" << ','
+    << "IntraDirAvg" << ',' << "IntraDirSD" << ',' << "gradAvg" << ',' << "gradAvgH" << ',' << "gradAvgV" << ','
+    << "gradAvg45" << ',' << "gradAvg135" << ',' << "Entropy" << ',' << "picGrad" << ','
+    << "curQP" << ',' << "picSize" << ','
+    << "isQT" << ',' << "isBTH" << ',' << "isBTV" << ',' << "isTTH" << ',' << "isTTV" << ',' << "isDONT" << ','
+    << "totalPixel" << endl;
 
   mTraceF.close();
   EncCu::ccCsvFile = MyTraceFile;

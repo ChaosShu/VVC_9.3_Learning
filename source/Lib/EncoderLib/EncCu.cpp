@@ -242,49 +242,107 @@ void EncCu::ccExtractFt(CodingStructure* bestCS, Partitioner& partitioner, strin
   const UnitArea& currArea = partitioner.currArea();
   const CodingUnit& cu = *bestCS->getCU(currArea.blocks[partitioner.chType], partitioner.chType);
   const PartSplit splitMode = CU::getSplitAtDepth(cu, partitioner.currDepth);
+  int16_t splitFlag[6]{ 0 };//**
+  if (splitMode == 2000) splitFlag[5] = 1;
+  else splitFlag[splitMode] = 1;
 
   auto x0 = readArea.x;//
   auto y0 = readArea.y;//
   auto width = readArea.width;//
   auto height = readArea.height;//
-  /*auto pX0 = bestCS->parent->area.lx();
-  auto pY0 = bestCS->parent->area.ly();
-  auto pW = bestCS->parent->area.lwidth();
-  auto pH = bestCS->parent->area.lheight();*/
-  //auto pBest = bestCS->parent->bestCS.
-  auto totalPixel = readArea.area();//
-  auto gradient = ccGetGradient(*bestCS, readArea, inputBitDepth);
-  auto Entropy = ccgetEntropy(*bestCS, readArea );
+  auto chType = partitioner.chType;//
+  auto curQP = bestCS->currQP[chType];//**
+
+  auto lCU = bestCS->getCU(bestCS->area.blocks[chType].pos().offset(-1, 0), chType);
+  auto tCU = bestCS->getCU(bestCS->area.blocks[chType].pos().offset(0, -1), chType);
+  auto ltCU = bestCS->getCU(bestCS->area.blocks[chType].pos().offset(-1, -1), chType);
+  auto lPU = bestCS->getPU(bestCS->area.blocks[chType].pos().offset(-1, 0), chType);
+  auto tPU = bestCS->getPU(bestCS->area.blocks[chType].pos().offset(0, -1), chType);
+  auto ltPU = bestCS->getPU(bestCS->area.blocks[chType].pos().offset(-1, -1), chType);
+
+  auto lCUdepth = lCU ? lCU->depth : 0;
+  auto tCUdepth = tCU ? tCU->depth : 0;
+  auto ltCUdepth = ltCU ? ltCU->depth : 0;
+  auto lPUIntraDir = lPU ? int32_t(lPU->intraDir[chType]) : 0;
+  auto tPUIntraDir = tPU ? int32_t(tPU->intraDir[chType]) : 0;
+  auto ltPUIntraDir = ltPU ? int32_t(ltPU->intraDir[chType]) : 0;
+
+  bool validF[6] = { lCU ? true : false,tCU ? true : false ,ltCU ? true : false ,lPU ? true : false ,tPU ? true : false ,ltPU ? true : false };
+  bool isCUInvalid = !validF[0] && !validF[1] && !validF[2];
+  bool isPUInvalid = !validF[3] && !validF[4] && !validF[5];
+  /* lCU  tCU ltCU lPU  tPU  ltPU */
+
+  auto depthD = (double)(lCUdepth + tCUdepth + ltCUdepth + (isCUInvalid ? -99 : 0)) / ((lCU ? 1 : 0) + (tCU ? 1 : 0) + (ltCU ? 1 : 0) + (isCUInvalid ? 1 : 0))
+    - (double)partitioner.currDepth;//**临域深度差
+
+  auto cntPU = ((lPU ? 1 : 0) + (tPU ? 1 : 0) + (ltPU ? 1 : 0) + (isPUInvalid ? 1 : 0));
+  auto IntraDirAvg = double(lPUIntraDir + tPUIntraDir + ltPUIntraDir + (isPUInvalid ? -99 : 0)) / cntPU;//*
+  auto IntraDirSD = ((lPU ? pow((lPUIntraDir - IntraDirAvg), 2.0) : 0) + (tPU ? pow((tPUIntraDir - IntraDirAvg), 2.0) : 0)
+    + (ltPU ? pow((ltPUIntraDir - IntraDirAvg), 2.0) : 0) + (isPUInvalid ? -99 : 0)) / cntPU;//**临域方向方差
+
+  auto totalPixel = readArea.area();//nope
+  vector<double> areaGrad, picGrad;
+  ccGetGradient(*bestCS, readArea, inputBitDepth, areaGrad, true);//**区域平均梯度
+  CHECK(areaGrad.size() != 5, "区域梯度数目出错，应为5  @@@");
+  auto Entropy = ccgetEntropy(*bestCS, readArea );//**区域熵
+  ccGetGradient(*bestCS->picture->cs, bestCS->picture->cs->area.blocks[0], inputBitDepth, picGrad, false);//**帧平均梯度
+  CHECK(picGrad.size() != 1, "图像梯度数目出错，应为1  @@@");
+  auto picSize = bestCS->picture->Y().area();//**帧尺寸
+
 
   ofstream mTraceF;
   mTraceF.open(filename, ios::app);
-  mTraceF << xxxpoc << ',' << x0 << ',' << y0 << ',' << width << ',' << height << ',' /*<< pX0 << ',' << pY0 << ',' << pW << ',' << pH << ',' */<< splitMode
-    << ',' << gradient << ',' << Entropy << ',' << totalPixel << endl;
+  mTraceF << xxxpoc << ',' << x0 << ',' << y0 << ',' << width << ',' << height << ',' << depthD << ','
+    << IntraDirAvg << ',' << IntraDirSD << ',' << areaGrad[0] << ',' << areaGrad[1] << ',' << areaGrad[2] << ',' 
+    << areaGrad[3] << ',' << areaGrad[4] << ',' << Entropy << ',' << picGrad[0] << ','
+    << curQP << ',' << picSize << ','
+    << splitFlag[0] << ',' << splitFlag[1] << ',' << splitFlag[2] << ',' << splitFlag[3] << ','
+    << splitFlag[4] << ',' << splitFlag[5] << ',' << totalPixel << endl;
   mTraceF.close();
 
 }
 
-int EncCu::ccGetGradient(const CodingStructure& cs, const CompArea& ClipedArea, int inputDepth)
+void EncCu::ccGetGradient(const CodingStructure& cs, const CompArea& ClipedArea, int inputDepth, vector<double>& gradList, bool b_dir)
 {
   int G{ 0 };
   uint32_t w{ ClipedArea.width }, h{ ClipedArea.height };
   PelBuf& areaBuf = cs.picture->getTrueOrigBuf(ClipedArea);
   
-  int gH{ 0 }, gV{ 0 }, g{ 0 };
+  int gHt{ 0 }, gVt{ 0 }, g45t{ 0 }, g135t{ 0 };
+  double g{ 0.0 }, gh{ 0.0 }, gv{ 0.0 }, g45{ 0.0 }, g135{ 0.0 };
   for (size_t i = 1; i < w-1 ; i++)
   {
     for (size_t j = 1; j < h-1 ; j++)
     {
-      gH = -areaBuf.at(i - 1, j - 1) - (areaBuf.at(i - 1, j) << 1) - areaBuf.at(i - 1, j + 1)
-        + areaBuf.at(i + 1, j - 1) + (areaBuf.at(i + 1, j) << 1) + areaBuf.at(i + 1, j + 1);
-      gV = -areaBuf.at(i - 1, j - 1) - (areaBuf.at(i, j - 1) << 1) - areaBuf.at(i + 1, j - 1)
-        + areaBuf.at(i - 1, j + 1) + (areaBuf.at(i, j + 1) << 1) + areaBuf.at(i + 1, j + 1);
-      g = std::abs(gH) + abs(gV);
+      gHt = std::abs(-areaBuf.at(i - 1, j - 1) - (areaBuf.at(i - 1, j) << 1) - areaBuf.at(i - 1, j + 1)
+        + areaBuf.at(i + 1, j - 1) + (areaBuf.at(i + 1, j) << 1) + areaBuf.at(i + 1, j + 1));
+      gVt = std::abs(-areaBuf.at(i - 1, j - 1) - (areaBuf.at(i, j - 1) << 1) - areaBuf.at(i + 1, j - 1)
+        + areaBuf.at(i - 1, j + 1) + (areaBuf.at(i, j + 1) << 1) + areaBuf.at(i + 1, j + 1));
+      g45t = std::abs(-areaBuf.at(i - 1, j) - (areaBuf.at(i - 1, j + 1) << 1) - areaBuf.at(i, j + 1)
+        + areaBuf.at(i, j - 1) + (areaBuf.at(i + 1, j - 1) << 1) + areaBuf.at(i + 1, j));
+      g135t = std::abs(-areaBuf.at(i - 1, j) - (areaBuf.at(i - 1, j - 1) << 1) - areaBuf.at(i, j - 1)
+        + areaBuf.at(i + 1, j) + (areaBuf.at(i + 1, j + 1) << 1) + areaBuf.at(i, j + 1));
+      g += gHt + gVt + g45t + g135t;
+      if (b_dir)
+      {
+        gh += gHt;
+        gv += gVt;
+        g45 += g45t;
+        g135 += g135t;
+      }
     }
   }
-  g /= ClipedArea.area();
+  auto size = double(areaBuf.area());
+  g /= size;
   //g = inputDepth == 8 ? g >> 2 : g;
-  return g;
+  gradList.push_back(g);
+  if (b_dir)
+  {
+    gh /= size; gv /= size;
+    g45 /= size; g135 /= size;
+    gradList.push_back(gh);gradList.push_back(gv); 
+    gradList.push_back(g45);gradList.push_back(g135);
+  }
 }
 
 double EncCu::ccgetEntropy(const CodingStructure& cs, const CompArea& ClipedArea)
@@ -463,7 +521,12 @@ void EncCu::compressCtu( CodingStructure& cs, const UnitArea& area, const unsign
   m_CABACEstimator->getCtx() = m_CurrCtx->start;
   m_CurrCtx                  = 0;
 
-
+  //auto cuContainer = cs.traverseCUs(cs.area, CHANNEL_TYPE_LUMA);
+  //vector<int> depth;
+  //for (auto itCU : cuContainer)
+  //{
+  //  depth.push_back(itCU.depth);
+  //}
   // Ensure that a coding was found
   // Selected mode's RD-cost must be not MAX_DOUBLE.
   CHECK( bestCS->cus.empty()                                   , "No possible encoding found" );
@@ -1118,7 +1181,7 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
   
   
   /*Chaos*/
-  if(partitioner.chType == CHANNEL_TYPE_LUMA) ccExtractFt(bestCS, partitioner, EncCu::ccCsvFile);
+  if (partitioner.chType == CHANNEL_TYPE_LUMA && bestCS->area.lwidth() == 32 && bestCS->area.lheight() == 32) ccExtractFt(bestCS, partitioner, EncCu::ccCsvFile);
 }
 
 #if SHARP_LUMA_DELTA_QP || ENABLE_QPA_SUB_CTU
