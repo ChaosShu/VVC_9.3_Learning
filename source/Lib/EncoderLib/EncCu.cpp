@@ -279,29 +279,69 @@ int EncCu::ccGetGradient(const CodingStructure& cs, const CompArea& ClipedArea, 
   return g;
 }
 
-double EncCu::ccgetEntropy(const CodingStructure& cs, const CompArea& ClipedArea)
+vector<double> EncCu::ccgetEntropy(const CodingStructure& cs, const CompArea& ClipedArea)
 {
-  int levelCnts{ 0 };
-  double E{ 0 };
+  //int tCnts{ 0 }, upCnts{ 0 }, downCnts{ 0 }, leftCnts{ 0 }, rightCnts{ 0 }, up3Cnts{ 0 }, mid3hCnts{ 0 }, down3Cnts{ 0 }, left3Cnts{ 0 }, mid3vCnts{ 0 }, right3Cnts{ 0 };
+  //double E{ 0.0 }, upE{ 0.0 }, downE{ 0.0 }, leftE{ 0.0 }, rightE{ 0.0 }, up3E{ 0.0 }, mid3hE{ 0.0 }, down3E{ 0.0 }, left3E{ 0.0 }, right3E{ 0.0 }, mid3vE{ 0.0 };
+  
   uint32_t w{ ClipedArea.width }, h{ ClipedArea.height };
+
+  const int TOTAL = 0, UP = 1, DOWN = 2, LEFT = 3, RIGHT = 4, UP3 = 5, MID3H = 6, DOWN3 = 7, LEFT3 = 8, MID3V = 9, RIGHT3 = 10;
+  int cnts[11]{ 0 };
+  vector<double> entro(11, 0.0);
+
   PelBuf& areaBuf = cs.picture->getTrueOrigBuf(ClipedArea);
-  std::unordered_map<int, double> freqMap;
-  for (size_t i = 1; i < w - 1; i++)
+  vector<unordered_map<int, double>> freqMap(11);/* total up down left right up3 mid3h down3 left3 mid3v right3*/
+  for (uint32_t i = 0; i < w; i++)
   {
-    for (size_t j = 1; j < h - 1; j++)
+    for (uint32_t j = 0; j < h; j++)
     {
-      freqMap[areaBuf.at(i, j)] += 1.0;
-      levelCnts++;
+      freqMap[0][areaBuf.at(i, j)] += 1.0;
+      cnts[TOTAL]++;
+      /* VERTICAL JUDGE*/
+      if (i < 3*(w << 2)) {//  not right3V
+        if (i < (w << 1)) {//left2
+          freqMap[LEFT][areaBuf.at(i, j)] += 1.0;
+          cnts[LEFT]++;
+        }
+        else {//mid3v
+          freqMap[MID3V][areaBuf.at(i, j)] += 1.0;
+          cnts[MID3V]++;
+        }
+      }
+      else {//right3V
+        freqMap[RIGHT3][areaBuf.at(i, j)] += 1.0;
+        cnts[RIGHT3]++;
+      }
+      /* HORIZONTAL JUDGE*/
+      if (j < 3 * (h << 2)) {//  not down3V
+        if (j < (h << 1)) {//up2
+          freqMap[UP][areaBuf.at(i, j)] += 1.0;
+          cnts[UP]++;
+        }
+        else {//mid3h
+          freqMap[MID3H][areaBuf.at(i, j)] += 1.0;
+          cnts[MID3H]++;
+        }
+      }
+      else {// down3V
+        freqMap[DOWN3][areaBuf.at(i, j)] += 1.0;
+        cnts[DOWN3]++;
+      }
     }
   }
-  for (auto &it : freqMap)
+  for (int i{0};i<freqMap.size();i++)
   {
-    it.second /= levelCnts;//¸ÅÂÊ
-    it.second = -10 * std::log10(it.second);//ìØ
-    E += it.second;
+    for (auto& itt : freqMap[i]) {
+      itt.second /= cnts[i];//¸ÅÂÊ
+      itt.second = -10 * std::log10(itt.second);//ìØ
+      entro[i] += itt.second;
+    }
   }
-
-  return E;
+  CHECK(cnts[TOTAL] != w * h || (cnts[LEFT] & cnts[RIGHT] & cnts[UP] & cnts[DOWN]) != (w * h) << 1 ||
+    (cnts[UP3] & cnts[DOWN3] & cnts[LEFT3] & cnts[RIGHT3]) != (w * h) << 2 ||
+    (cnts[MID3H] & cnts[MID3V]) != (w * h) << 1, "ìØ¼ÆËã´íÎó");
+  return entro;
 }
 
 

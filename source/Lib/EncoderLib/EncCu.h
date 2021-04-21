@@ -237,7 +237,7 @@ public:
   void ccSetSplitType(const EncTestMode& encTestMode, int &ccSplitType);
   void ccExtractFt(CodingStructure* bestCS, Partitioner& partitioner, string filename);
   int ccGetGradient(const CodingStructure& cs, const CompArea& ClipedArea, int inputDepth);
-  double ccgetEntropy(const CodingStructure& cs, const CompArea& ClipedArea);
+  vector<double> ccgetEntropy(const CodingStructure& cs, const CompArea& ClipedArea);
   /******************/
 
   void   setMergeBestSATDCost(double cost) { m_mergeBestSATDCost = cost; }
