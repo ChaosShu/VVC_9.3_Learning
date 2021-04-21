@@ -2506,8 +2506,18 @@ public:
 /// slice header class
 class Slice
 {
-
+  /*CHAOS*/
+public:
+  /*场景切换相关*/
+#ifdef _MY_SCENECUT_
+  void ccSetSceneCut(bool val);
+#endif
 private:
+  /*场景切换相关*/
+#ifdef _MY_SCENECUT_
+  bool ccIsSceneCut;
+#endif
+
   //  Bitstream writing
   bool                       m_saoEnabledFlag[MAX_NUM_CHANNEL_TYPE];
   int                        m_iPOC;/*maybe this Chaos_ctx*/

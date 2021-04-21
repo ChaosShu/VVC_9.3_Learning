@@ -47,7 +47,8 @@
 //! \{
 
 Slice::Slice()
-: m_iPOC                          ( 0 )
+: ccIsSceneCut                    ( true )
+, m_iPOC                          ( 0 )
 , m_iLastIDR                      ( 0 )
 , m_prevGDRInSameLayerPOC         ( MAX_INT )
 , m_iAssociatedIRAP               ( 0 )
@@ -153,6 +154,10 @@ Slice::~Slice()
   m_sliceMap.initSliceMap();
 }
 
+/*CHaos*/
+void Slice::ccSetSceneCut(bool val) {
+  ccIsSceneCut = val;
+}
 
 void Slice::initSlice()
 {

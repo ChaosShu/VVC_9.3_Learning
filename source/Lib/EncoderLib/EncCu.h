@@ -314,7 +314,7 @@ protected:
 #if CHAOS_FAST_PARTITION
   /*CHAOS*/
   //void ccResetTestMode(CodingStructure*& tempCS, Partitioner& partitioner);// my member function
-  void ccEarlyConsTestMode(CodingStructure*& tempCS, Partitioner& partitioner);
+  void ccEarlyConsTestMode(const CodingStructure*& tempCS, const Partitioner& partitioner);
 #endif
 };
 
