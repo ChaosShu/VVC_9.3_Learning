@@ -233,7 +233,7 @@ void EncCu::ccSetSplitType(const EncTestMode &encTestMode, int &ccSplitType)
   }
 }
 
-void EncCu::ccExtractFt(CodingStructure* bestCS, Partitioner& partitioner, string filename) {
+void EncCu::ccExtractBestFt(CodingStructure* bestCS, Partitioner& partitioner, string filename) {
 
   auto xxxpoc = bestCS->slice->getPOC() * getEncCfg()->getTemporalSubsampleRatio();//for subSampleRatio : 自适应更新，poc对应为不下采样的poc
   auto inputBitDepth = getEncCfg()->getInputBitDepth()[0];
@@ -284,7 +284,17 @@ void EncCu::ccExtractFt(CodingStructure* bestCS, Partitioner& partitioner, strin
   vector<double> areaGrad, picGrad;
   ccGetGradient(*bestCS, readArea, inputBitDepth, areaGrad, true);//**区域平均梯度
   CHECK(areaGrad.size() != 5, "区域梯度数目出错，应为5  @@@");
-  auto Entropy = ccgetEntropy(*bestCS, readArea );//**区域熵
+  vector<double> Entropy;//**区域熵
+  vector<int> Contrast;//**区域对比度
+  double HarrCoff;//***Harr 小波系数
+  ccgetEntropy(*bestCS, readArea, Entropy);
+  ccgetContrast(*bestCS, readArea, Contrast);
+  ccgetHarrCoff(*bestCS, readArea, HarrCoff);
+  auto deltaEb = fabs(Entropy[1] - Entropy[2]) - fabs(Entropy[3] - Entropy[4]);//**Fen2020
+  auto deltaEt = fabs(Entropy[5] - Entropy[6]) + fabs(Entropy[6] - Entropy[7]) - fabs(Entropy[8] - Entropy[9]) - fabs(Entropy[9] - Entropy[10]);//FenChen2020
+  auto deltaCb = abs(Contrast[1] - Contrast[2]) - abs(Contrast[3] - Contrast[4]);//**Fen2020
+  auto deltaCt = abs(Contrast[5] - Contrast[6]) + abs(Contrast[6] - Contrast[7]) - abs(Contrast[8] - Contrast[9]) - abs(Contrast[9] - Contrast[10]);//FenChen2020
+
   ccGetGradient(*bestCS->picture->cs, bestCS->picture->cs->area.blocks[0], inputBitDepth, picGrad, false);//**帧平均梯度
   CHECK(picGrad.size() != 1, "图像梯度数目出错，应为1  @@@");
   auto picSize = bestCS->picture->Y().area();//**帧尺寸
@@ -294,12 +304,17 @@ void EncCu::ccExtractFt(CodingStructure* bestCS, Partitioner& partitioner, strin
   mTraceF.open(filename, ios::app);
   mTraceF << xxxpoc << ',' << x0 << ',' << y0 << ',' << width << ',' << height << ',' << depthD << ','
     << IntraDirAvg << ',' << IntraDirSD << ',' << areaGrad[0] << ',' << areaGrad[1] << ',' << areaGrad[2] << ',' 
-    << areaGrad[3] << ',' << areaGrad[4] << ',' << Entropy << ',' << picGrad[0] << ','
-    << curQP << ',' << picSize << ','
+    << areaGrad[3] << ',' << areaGrad[4] << ',' << Entropy[0] << ',' << picGrad[0] << ','
+    << curQP << ',' << picSize << ','<< deltaEb << ',' << deltaEt << ',' << deltaCb << ',' << deltaCt
+    << ',' << HarrCoff
     << splitFlag[0] << ',' << splitFlag[1] << ',' << splitFlag[2] << ',' << splitFlag[3] << ','
     << splitFlag[4] << ',' << splitFlag[5] << ',' << totalPixel << endl;
   mTraceF.close();
 
+}
+
+void EncCu::ccExtractProcessFt(CodingStructure* bestCS, Partitioner& partitioner, string filename)
+{
 }
 
 void EncCu::ccGetGradient(const CodingStructure& cs, const CompArea& ClipedArea, int inputDepth, vector<double>& gradList, bool b_dir)
@@ -310,9 +325,9 @@ void EncCu::ccGetGradient(const CodingStructure& cs, const CompArea& ClipedArea,
   
   int gHt{ 0 }, gVt{ 0 }, g45t{ 0 }, g135t{ 0 };
   double g{ 0.0 }, gh{ 0.0 }, gv{ 0.0 }, g45{ 0.0 }, g135{ 0.0 };
-  for (size_t i = 1; i < w-1 ; i++)
+  for (int i = 1; i < w-1 ; i++)
   {
-    for (size_t j = 1; j < h-1 ; j++)
+    for (int j = 1; j < h-1 ; j++)
     {
       gHt = std::abs(-areaBuf.at(i - 1, j - 1) - (areaBuf.at(i - 1, j) << 1) - areaBuf.at(i - 1, j + 1)
         + areaBuf.at(i + 1, j - 1) + (areaBuf.at(i + 1, j) << 1) + areaBuf.at(i + 1, j + 1));
@@ -345,29 +360,203 @@ void EncCu::ccGetGradient(const CodingStructure& cs, const CompArea& ClipedArea,
   }
 }
 
-double EncCu::ccgetEntropy(const CodingStructure& cs, const CompArea& ClipedArea)
+void EncCu::ccgetEntropy(const CodingStructure& cs, const CompArea& ClipedArea, vector<double>& entroListm)
 {
-  int levelCnts{ 0 };
-  double E{ 0 };
+  const int TOTAL = 0, UP = 1, DOWN = 2, LEFT = 3, RIGHT = 4, UP3 = 5, MID3H = 6, DOWN3 = 7, LEFT3 = 8, MID3V = 9, RIGHT3 = 10;
+  vector<unordered_map<int, double>> freqMap(11);/* total up down left right up3 mid3h down3 left3 mid3v right3*/
+  int cnts[11]{ 0 };
+  entroListm.resize(11, 0.0);
+
   uint32_t w{ ClipedArea.width }, h{ ClipedArea.height };
   PelBuf& areaBuf = cs.picture->getTrueOrigBuf(ClipedArea);
-  std::unordered_map<int, double> freqMap;
-  for (size_t i = 1; i < w - 1; i++)
+  
+  for (uint32_t j = 0; j < h; j++)
   {
-    for (size_t j = 1; j < h - 1; j++)
+    for (uint32_t i = 0; i < w; i++)
     {
-      freqMap[areaBuf.at(i, j)] += 1.0;
-      levelCnts++;
+      freqMap[0][areaBuf.at(i, j)] += 1.0;
+      cnts[TOTAL]++;
+      /* VERTICAL JUDGE*/
+      if (i < (w >> 1)) {//  left
+        //left2
+        freqMap[LEFT][areaBuf.at(i, j)] += 1.0;
+        cnts[LEFT]++;
+        //left3v
+        if (i < (w >> 2)) {
+          freqMap[LEFT3][areaBuf.at(i, j)] += 1.0;
+          cnts[LEFT3]++;
+        }
+        //mid3v
+        else {
+          freqMap[MID3V][areaBuf.at(i, j)] += 1.0;
+          cnts[MID3V]++;
+        }
+      }
+      else {//right
+        //right2
+        freqMap[RIGHT][areaBuf.at(i, j)] += 1.0;
+        cnts[RIGHT]++;
+        if (i >= 3 * (w >> 2)) {
+          //right3
+          freqMap[RIGHT3][areaBuf.at(i, j)] += 1.0;
+          cnts[RIGHT3]++;
+        }
+        else {
+          freqMap[MID3V][areaBuf.at(i, j)] += 1.0;
+          cnts[MID3V]++;
+        }
+      }
+      /* HORIZONTAL JUDGE*/
+      if (j < (h >> 1)) {//  up
+        //up2
+        freqMap[UP][areaBuf.at(i, j)] += 1.0;
+        cnts[UP]++;
+        //up3h
+        if (j < (h >> 2)) {
+          freqMap[UP3][areaBuf.at(i, j)] += 1.0;
+          cnts[UP3]++;
+        }
+        //mid3h
+        else {
+          freqMap[MID3H][areaBuf.at(i, j)] += 1.0;
+          cnts[MID3H]++;
+        }
+      }
+      else {//down
+        //down2
+        freqMap[DOWN][areaBuf.at(i, j)] += 1.0;
+        cnts[DOWN]++;
+        if (j >= 3 * (h >> 2)) {
+          //down3
+          freqMap[DOWN3][areaBuf.at(i, j)] += 1.0;
+          cnts[DOWN3]++;
+        }
+        else {//mid3h
+          freqMap[MID3H][areaBuf.at(i, j)] += 1.0;
+          cnts[MID3H]++;
+        }
+      }
     }
   }
-  for (auto &it : freqMap)
+  for (int i{ 0 }; i < freqMap.size(); i++)
   {
-    it.second /= levelCnts;//概率
-    it.second = -10 * std::log10(it.second);//熵
-    E += it.second;
+    for (auto& itt : freqMap[i]) {
+      itt.second /= cnts[i];//概率
+      itt.second = -10 * std::log10(itt.second);//熵
+      entroListm[i] += itt.second;
+    }
   }
+  CHECK(cnts[TOTAL] != w * h || (cnts[LEFT] & cnts[RIGHT] & cnts[UP] & cnts[DOWN]) != (w * h) >> 1 ||
+    (cnts[UP3] & cnts[DOWN3] & cnts[LEFT3] & cnts[RIGHT3]) != (w * h) >> 2 ||
+    (cnts[MID3H] & cnts[MID3V]) != (w * h) >> 1, "熵计算错误");
+}
 
-  return E;
+void EncCu::ccgetContrast(const CodingStructure& cs, const CompArea& ClipedArea, vector<int>& contraListm)
+{
+  const int TOTAL = 0, UP = 1, DOWN = 2, LEFT = 3, RIGHT = 4, UP3 = 5, MID3H = 6, DOWN3 = 7, LEFT3 = 8, MID3V = 9, RIGHT3 = 10;
+  vector<unordered_map<int, double>> freqMap(11);/* total up down left right up3 mid3h down3 left3 mid3v right3*/
+  int cnts[11]{ 0 };
+  contraListm.resize(11, 0);
+
+  uint32_t w{ ClipedArea.width }, h{ ClipedArea.height };
+  PelBuf& areaBuf = cs.picture->getTrueOrigBuf(ClipedArea);
+
+  for (uint32_t j = 0; j < h; j++)
+  {
+    for (uint32_t i = 0; i < w; i++)
+    {
+      contraListm[TOTAL] += (int)pow(i - j, 2) * areaBuf.at(i, j);
+      cnts[TOTAL]++;
+      /* VERTICAL JUDGE*/
+      if (i < (w >> 1)) {//  left
+        /* left2 */
+        contraListm[LEFT] += (int)pow(i - j, 2) * areaBuf.at(i, j);
+        cnts[LEFT]++;
+        /* left3v */
+        if (i < (w >> 2)) {
+          contraListm[LEFT3] += (int)pow(i - j, 2) * areaBuf.at(i, j);
+          cnts[LEFT3]++;
+        }
+        /* mid3v */
+        else {
+          contraListm[MID3V] += (int)pow(i - j, 2) * areaBuf.at(i, j);
+          cnts[MID3V]++;
+        }
+      }
+      else {//right
+        /*right2*/
+        contraListm[RIGHT] += (int)pow(i - j, 2) * areaBuf.at(i, j);
+        cnts[RIGHT]++;
+        if (i >= 3 * (w >> 2)) {
+          /*right3*/
+          contraListm[RIGHT3] += (int)pow(i - j, 2) * areaBuf.at(i, j);
+          cnts[RIGHT3]++;
+        }
+        else {
+          contraListm[MID3V] += (int)pow(i - j, 2) * areaBuf.at(i, j);
+          cnts[MID3V]++;
+        }
+      }
+      /* HORIZONTAL JUDGE*/
+      if (j < (h >> 1)) {//  up
+        /*up2*/
+        contraListm[UP] += (int)pow(i - j, 2) * areaBuf.at(i, j);
+        cnts[UP]++;
+        /*up3h*/
+        if (j < (h >> 2)) {
+          contraListm[UP3] += (int)pow(i - j, 2) * areaBuf.at(i, j);
+          cnts[UP3]++;
+        }
+        /*mid3h*/
+        else {
+          contraListm[MID3H] += (int)pow(i - j, 2) * areaBuf.at(i, j);
+          cnts[MID3H]++;
+        }
+      }
+      else {//down
+        /*down2*/
+        contraListm[DOWN] += (int)pow(i - j, 2) * areaBuf.at(i, j);
+        cnts[DOWN]++;
+        if (j >= 3 * (h >> 2)) {
+          /*down3*/
+          contraListm[DOWN3] += (int)pow(i - j, 2) * areaBuf.at(i, j);
+          cnts[DOWN3]++;
+        }
+        else {/*mid3h*/
+          contraListm[MID3H] += (int)pow(i - j, 2) * areaBuf.at(i, j);
+          cnts[MID3H]++;
+        }
+      }
+    }
+  }
+  CHECK(cnts[TOTAL] != w * h || (cnts[LEFT] & cnts[RIGHT] & cnts[UP] & cnts[DOWN]) != (w * h) >> 1 ||
+    (cnts[UP3] & cnts[DOWN3] & cnts[LEFT3] & cnts[RIGHT3]) != (w * h) >> 2 ||
+    (cnts[MID3H] & cnts[MID3V]) != (w * h) >> 1, "纹理对比度计算错误");
+}
+
+void EncCu::ccgetHarrCoff(const CodingStructure& cs, const CompArea& ClipedArea, double& HarrListm)
+{
+  const int TOTAL = 0, UP = 1, DOWN = 2, LEFT = 3, RIGHT = 4, UP3 = 5, MID3H = 6, DOWN3 = 7, LEFT3 = 8, MID3V = 9,
+            RIGHT3 = 10;
+  vector<unordered_map<int, double>> freqMap(11); /* total up down left right up3 mid3h down3 left3 mid3v right3*/
+
+  uint32_t w{ ClipedArea.width }, h{ ClipedArea.height };
+  uint32_t halfW = w >> 1, halfH = h >> 1;
+  PelBuf & areaBuf = cs.picture->getTrueOrigBuf(ClipedArea);
+
+  int horH{ 0 }, horV{ 0 };
+  for (uint32_t j = 0; j < h; j++)
+  {
+    for (uint32_t i = 0; i < w; i++)
+    {
+      if (i >= (halfW) || j >= (halfH)) {
+        break;
+      }
+      horH += abs(areaBuf.at(i * 2, j * 2) + areaBuf.at(i * 2 + 1, j * 2) - areaBuf.at(i * 2, j * 2 + 1) - areaBuf.at(i * 2 + 1, j * 2 + 1));
+      horV += abs(areaBuf.at(i * 2, j * 2) + areaBuf.at(i * 2, j * 2 + 1) - areaBuf.at(i * 2 + 1, j * 2) - areaBuf.at(i * 2 + 1, j * 2 + 1));
+    }
+  }
+  HarrListm = double((horH - horV) << 2) / (w * h);
 }
 
 
@@ -1181,7 +1370,13 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, /*与当前CS同样大小*/
   
   
   /*Chaos*/
-  if (partitioner.chType == CHANNEL_TYPE_LUMA && bestCS->area.lwidth() == 32 && bestCS->area.lheight() == 32) ccExtractFt(bestCS, partitioner, EncCu::ccCsvFile);
+#if _EXTRACT_BEST_
+  if (partitioner.chType == CHANNEL_TYPE_LUMA 
+#if _ONLY_32_
+    && bestCS->area.lwidth() == 32 && bestCS->area.lheight() == 32
+#endif // _ONLY_32_
+    ) ccExtractBestFt(bestCS, partitioner, EncCu::ccCsvFile);
+#endif
 }
 
 #if SHARP_LUMA_DELTA_QP || ENABLE_QPA_SUB_CTU

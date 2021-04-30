@@ -244,15 +244,29 @@ int main(int argc, char* argv[])
   auto cccIndex = vdo_name.find_first_of('_');
   vdo_name = vdo_name.substr(0,cccIndex);
   int xxxqp = pcEncApp[0]->ccgetQP();
-  string MyTraceFile = vdo_name + "_QP" + std::to_string(xxxqp) + "_MyTraceFile.csv";
+  string MyTraceFile = vdo_name + "_QP" + std::to_string(xxxqp) + "_"
+#if _ONLY_32_
+    +"only32"
+#else
+    +"allCU"
+#endif
+#if _EXTRACT_BEST_
+    +"_best"
+#else
+    +"_process"
+#endif
+    +".csv";
   ofstream mTraceF;
   mTraceF.open(MyTraceFile, ios::out);
                                      /*pX0,pY0,pW,pH,*/
                                   //|
+    //features
   mTraceF << "poc" << ',' << "x0" << ',' << "y0" << ',' << "width" << ',' << "height" << ',' << "depthD" << ','
     << "IntraDirAvg" << ',' << "IntraDirSD" << ',' << "gradAvg" << ',' << "gradAvgH" << ',' << "gradAvgV" << ','
-    << "gradAvg45" << ',' << "gradAvg135" << ',' << "Entropy" << ',' << "picGrad" << ','
-    << "curQP" << ',' << "picSize" << ','
+    << "gradAvg45" << ',' << "gradAvg135" << ',' << "Entropy" << ',' << "picGrad" << ',' << "curQP" << ','
+          << "picSize" << ',' << "deltaEb" << ',' << "deltaEt" << ',' << "deltaCb" << ',' << "deltaCt" << ','
+          << "HarrCoff"
+    //results
     << "isQT" << ',' << "isBTH" << ',' << "isBTV" << ',' << "isTTH" << ',' << "isTTV" << ',' << "isDONT" << ','
     << "totalPixel" << endl;
 

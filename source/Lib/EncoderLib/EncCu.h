@@ -235,9 +235,12 @@ public:
   static std::string ccCsvFile;/* 要生成的csv文件名 */
   //static bool roundFlag;/*由于code_tree_unit 会在encodeSlice里调用和compressSlice->compressCtus里调用，多次调用，因此用此标志限制输出次数*/
   void ccSetSplitType(const EncTestMode& encTestMode, int &ccSplitType);
-  void ccExtractFt(CodingStructure* bestCS, Partitioner& partitioner, string filename);
+  void ccExtractBestFt(CodingStructure* bestCS, Partitioner& partitioner, string filename);
+  void ccExtractProcessFt(CodingStructure* bestCS, Partitioner& partitioner, string filename);
   void ccGetGradient(const CodingStructure& cs, const CompArea& ClipedArea, int inputDepth, vector<double>& gradListm, bool b_dir);
-  double ccgetEntropy(const CodingStructure& cs, const CompArea& ClipedArea);
+  void ccgetEntropy(const CodingStructure& cs, const CompArea& ClipedArea, vector<double>& entroListm);
+  void ccgetContrast(const CodingStructure& cs, const CompArea& ClipedArea, vector<int>& contraListm);
+  void ccgetHarrCoff(const CodingStructure& cs, const CompArea& ClipedArea, double& HarrListm);
   /******************/
 
   void   setMergeBestSATDCost(double cost) { m_mergeBestSATDCost = cost; }
