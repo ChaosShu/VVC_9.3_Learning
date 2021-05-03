@@ -241,8 +241,9 @@ int main(int argc, char* argv[])
   /*unsigned short GOP_cnt{ 0 };///@UpdatedBy:Chaos */
 
   std::string vdo_name = pcEncApp[0]->ccgetInputVideoName();
-  auto cccIndex = vdo_name.find_first_of('_');
-  vdo_name = vdo_name.substr(0,cccIndex);
+  auto  ccbegIndex = vdo_name.find_last_of("\\");
+  auto ccendIndex = vdo_name.find_first_of('_');
+  vdo_name = vdo_name.substr(ccbegIndex+1, ccendIndex-ccbegIndex-1);
   int xxxqp = pcEncApp[0]->ccgetQP();
   string MyTraceFile = vdo_name + "_QP" + std::to_string(xxxqp) + "_"
 #if _ONLY_32_
@@ -264,8 +265,8 @@ int main(int argc, char* argv[])
   mTraceF << "poc" << ',' << "x0" << ',' << "y0" << ',' << "width" << ',' << "height" << ',' << "depthD" << ','
     << "IntraDirAvg" << ',' << "IntraDirSD" << ',' << "gradAvg" << ',' << "gradAvgH" << ',' << "gradAvgV" << ','
     << "gradAvg45" << ',' << "gradAvg135" << ',' << "Entropy" << ',' << "picGrad" << ',' << "curQP" << ','
-          << "picSize" << ',' << "deltaEb" << ',' << "deltaEt" << ',' << "deltaCb" << ',' << "deltaCt" << ','
-          << "HarrCoff"
+    << "picSize" << ',' << "deltaEb" << ',' << "deltaEt" << ',' << "deltaCb" << ',' << "deltaCt" << ','
+    << "HarrCoff" << ','
     //results
     << "isQT" << ',' << "isBTH" << ',' << "isBTV" << ',' << "isTTH" << ',' << "isTTV" << ',' << "isDONT" << ','
     << "totalPixel" << endl;

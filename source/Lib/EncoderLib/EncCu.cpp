@@ -303,10 +303,10 @@ void EncCu::ccExtractBestFt(CodingStructure* bestCS, Partitioner& partitioner, s
   ofstream mTraceF;
   mTraceF.open(filename, ios::app);
   mTraceF << xxxpoc << ',' << x0 << ',' << y0 << ',' << width << ',' << height << ',' << depthD << ','
-    << IntraDirAvg << ',' << IntraDirSD << ',' << areaGrad[0] << ',' << areaGrad[1] << ',' << areaGrad[2] << ',' 
+    << IntraDirAvg << ',' << IntraDirSD << ',' << areaGrad[0] << ',' << areaGrad[1] << ',' << areaGrad[2] << ','
     << areaGrad[3] << ',' << areaGrad[4] << ',' << Entropy[0] << ',' << picGrad[0] << ','
-    << curQP << ',' << picSize << ','<< deltaEb << ',' << deltaEt << ',' << deltaCb << ',' << deltaCt
-    << ',' << HarrCoff
+    << curQP << ',' << picSize << ',' << deltaEb << ',' << deltaEt << ',' << deltaCb << ',' << deltaCt
+    << ',' << HarrCoff << ','
     << splitFlag[0] << ',' << splitFlag[1] << ',' << splitFlag[2] << ',' << splitFlag[3] << ','
     << splitFlag[4] << ',' << splitFlag[5] << ',' << totalPixel << endl;
   mTraceF.close();

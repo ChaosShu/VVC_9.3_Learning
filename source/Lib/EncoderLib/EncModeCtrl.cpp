@@ -239,14 +239,14 @@ void EncModeCtrl::ccUpdateTMbyEntropy(double entropy)
 
 void EncModeCtrl::cccontrolValidTestMode(uint8_t &flowFlag, EncTestMode testMode, Partitioner& partitioner, CodingStructure& tempCS, CodingStructure& bestCS)
 {
-  if (!partitioner.canSplit(getPartSplit(testMode), tempCS))//模式不满足VVC的划分约束xxxxxx跳到CU下一个划分,用 continue继续do
+  if (!partitioner.canSplit(getPartSplit(testMode), tempCS))//模式不满足VVC的划分约束xxxxxx跳到CU下一个划分,用 continue 继续 do
   {
     m_ComprCUCtxList.back().testModes.pop_back();
     flowFlag = 0;
   }
   if ((m_ComprCUCtxList.back().testModes.front().type == ETM_INTRA) && (m_ComprCUCtxList.back().testModes.size() == 1))//帧内被禁止的情况
   {
-    if (!bestCS.cus.size()) {//除了帧内的其他模式都不可用(即bestCS的cus仍然是默认的0),xxxxxx继续当前划分，do nothing
+    if (!bestCS.cus.size()) {//除了帧内的其他模式都不可用(即bestCS的cus仍然是默认的0),xxxxxx 继续当前划分，do nothing
       flowFlag = 1;
     }
     else//已经有其他可用的模式被选为bestModexxxxxx结束CU划分
