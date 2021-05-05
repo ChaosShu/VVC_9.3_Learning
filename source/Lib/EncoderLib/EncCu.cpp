@@ -278,7 +278,7 @@ void EncCu::ccExtractBestFt(CodingStructure* bestCS, Partitioner& partitioner, s
   auto cntPU = ((lPU ? 1 : 0) + (tPU ? 1 : 0) + (ltPU ? 1 : 0) + (isPUInvalid ? 1 : 0));
   auto IntraDirAvg = double(lPUIntraDir + tPUIntraDir + ltPUIntraDir + (isPUInvalid ? -99 : 0)) / cntPU;//*
   auto IntraDirSD = ((lPU ? pow((lPUIntraDir - IntraDirAvg), 2.0) : 0) + (tPU ? pow((tPUIntraDir - IntraDirAvg), 2.0) : 0)
-    + (ltPU ? pow((ltPUIntraDir - IntraDirAvg), 2.0) : 0) + (isPUInvalid ? -99 : 0)) / cntPU;//**临域方向方差
+    + (ltPU ? pow((ltPUIntraDir - IntraDirAvg), 2.0) : 0) + (isPUInvalid ? -99 : 0)) / cntPU;//**临域方向方差-Fscore及一些实验表示其贡献度很低，
 
   auto totalPixel = readArea.area();//nope
   vector<double> areaGrad, picGrad;
@@ -295,7 +295,7 @@ void EncCu::ccExtractBestFt(CodingStructure* bestCS, Partitioner& partitioner, s
   auto deltaCb = abs(Contrast[1] - Contrast[2]) - abs(Contrast[3] - Contrast[4]);//**Fen2020
   auto deltaCt = abs(Contrast[5] - Contrast[6]) + abs(Contrast[6] - Contrast[7]) - abs(Contrast[8] - Contrast[9]) - abs(Contrast[9] - Contrast[10]);//FenChen2020
 
-  ccGetGradient(*bestCS->picture->cs, bestCS->picture->cs->area.blocks[0], inputBitDepth, picGrad, false);//**帧平均梯度
+  ccGetGradient(*bestCS->picture->cs, bestCS->picture->cs->area.blocks[0], inputBitDepth, picGrad, false);//**帧平均梯度-在线学习用不到
   CHECK(picGrad.size() != 1, "图像梯度数目出错，应为1  @@@");
   auto picSize = bestCS->picture->Y().area();//**帧尺寸
 
@@ -454,7 +454,7 @@ void EncCu::ccgetEntropy(const CodingStructure& cs, const CompArea& ClipedArea, 
 void EncCu::ccgetContrast(const CodingStructure& cs, const CompArea& ClipedArea, vector<int>& contraListm)
 {
   const int TOTAL = 0, UP = 1, DOWN = 2, LEFT = 3, RIGHT = 4, UP3 = 5, MID3H = 6, DOWN3 = 7, LEFT3 = 8, MID3V = 9, RIGHT3 = 10;
-  vector<unordered_map<int, double>> freqMap(11);/* total up down left right up3 mid3h down3 left3 mid3v right3*/
+/* total up down left right up3 mid3h down3 left3 mid3v right3*/
   int cnts[11]{ 0 };
   contraListm.resize(11, 0);
 
